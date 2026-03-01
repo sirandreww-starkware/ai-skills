@@ -1,36 +1,29 @@
 ---
 name: fix-stack
-description: Walk a Graphite PR stack from bottom to top, running CI validation (formatting, clippy, tests) on each PR and fixing failures. Use when the user says "fix stack", "fix CI", "walk the stack", "validate stack", or wants to ensure all PRs in a Graphite stack pass CI.
+description: Walk a Graphite PR stack upward from the current PR, running CI validation (formatting, clippy, tests) on each PR and fixing failures. Use when the user says "fix stack", "fix CI", "walk the stack", "validate stack", or wants to ensure PRs in a Graphite stack pass CI.
 ---
 
 # Fix Stack
 
-Walk a Graphite PR stack from bottom to top, validate each PR, fix CI failures, amend, restack, and continue upward until the entire stack is green.
+Validate the current PR and walk upward through the stack, fixing CI failures, amending, restacking, and continuing until every PR from here to the top is green.
 
 ## Step 1: Identify Stack & Crates
 
 1. **Show the stack:**
    ```bash
-   gt ls
+   gt ls -s
    ```
-2. **Identify the crate(s) under test.** Ask the user which crate(s) are being worked on. If the user isn't sure, infer from the stack by inspecting changed files:
+2. **Identify the crate(s) under test.** Ask the user which crate(s) are being worked on. If the user isn't sure, infer from changed files on the current branch:
    ```bash
-   gt bottom
    git diff HEAD^ --name-only
    ```
    Crate names come from `crates/<crate_name>/`. Collect all unique crate names across the stack if needed.
 
 3. **Build the `-p` flags.** For a single crate: `-p apollo_propeller`. For multiple: `-p crate_a -p crate_b`.
 
-## Step 2: Go to Bottom of Stack
+## Step 2: Walk Up & Validate
 
-```bash
-gt bottom
-```
-
-## Step 3: Walk Up & Validate
-
-Run a loop that validates each PR and walks up the stack. The loop stops at the first failure:
+Starting from the current PR, run a loop that validates and walks up. The loop stops at the first failure:
 
 ```bash
 while cfmt -- --check && cargo clippy -p <CRATE_FLAGS> --all-targets -- -D warnings && cargo nextest run -p <CRATE_FLAGS> && gt up; do :; done
@@ -39,12 +32,12 @@ while cfmt -- --check && cargo clippy -p <CRATE_FLAGS> --all-targets -- -D warni
 Replace `<CRATE_FLAGS>` with the appropriate `-p` arguments (e.g. `-p apollo_propeller` or `-p crate_a -p crate_b`).
 
 **If the loop exits**, one of two things happened:
-- **A validation step failed** -- proceed to Step 4.
-- **`gt up` failed because you're at the top** -- the whole stack is green. Skip to Step 7.
+- **A validation step failed** -- proceed to Step 3.
+- **`gt up` failed because you're at the top** -- every PR from here up is green. Skip to Step 6.
 
 Determine which case by checking `gt up` output or re-running the validation command alone.
 
-## Step 4: Fix the Failure
+## Step 3: Fix the Failure
 
 Read the error output to understand the failure:
 
@@ -60,7 +53,7 @@ cfmt -- --check && cargo clippy -p <CRATE_FLAGS> --all-targets -- -D warnings &&
 
 Repeat until validation passes.
 
-## Step 5: Amend & Restack
+## Step 4: Amend & Restack
 
 Once validation passes on the current PR:
 
@@ -84,7 +77,7 @@ Once validation passes on the current PR:
       ```
    5. Repeat until the entire stack is restacked.
 
-## Step 6: Continue Walking Up
+## Step 5: Continue Walking Up
 
 After the amend and restack complete, continue the validation walk from the current position:
 
@@ -92,11 +85,11 @@ After the amend and restack complete, continue the validation walk from the curr
 while cfmt -- --check && cargo clippy -p <CRATE_FLAGS> --all-targets -- -D warnings && cargo nextest run -p <CRATE_FLAGS> && gt up; do :; done
 ```
 
-If another failure is found, go back to Step 4. Otherwise, if you've reached the top, proceed to Step 7.
+If another failure is found, go back to Step 3. Otherwise, if you've reached the top, proceed to Step 6.
 
-## Step 7: Submit & Report
+## Step 6: Submit & Report
 
-Once the entire stack passes validation:
+Once every PR from the starting point to the top passes validation:
 
 1. **Submit:**
    ```bash
