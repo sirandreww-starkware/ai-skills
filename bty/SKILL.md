@@ -59,6 +59,7 @@ Then understand the lines that were referenced in the previous step.
 * **Resolved Discussions:** Group comments by thread (`in_reply_to_id`). If the **last reply is from the PR Author**, assume the discussion is resolved or pending the reviewer. **Skip these** unless they contain explicit, unaddressed TODOs.
 * **Active Discussions:** Focus on threads where the last reply is **not** from the PR author.
 * **Look at the code:** Refer to the code to see if the comments were adressed (a TODO was added or the issue is still there)
+* **Adress Bot Comments** Bot comments are important too, don't forget to take them into account.
 
 ## Step 3: Plan with User ("Ask before you do")
 
