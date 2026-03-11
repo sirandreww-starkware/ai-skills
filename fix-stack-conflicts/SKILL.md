@@ -46,10 +46,10 @@ For each conflicting file:
 After resolving all conflicts in the current PR, run the full validation suite:
 
 ```bash
-cfmt -- --check && cargo clippy -p <CRATE_FLAGS> --all-targets -- -D warnings && cargo nextest run -p <CRATE_FLAGS>
+scripts/rust_fmt.sh -- --check && cargo clippy -p <CRATE_FLAGS> --all-targets -- -D warnings && cargo nextest run -p <CRATE_FLAGS>
 ```
 
-- **Formatting issues:** Run `cfmt` to auto-fix, then re-check.
+- **Formatting issues:** Run `scripts/rust_fmt.sh` to auto-fix, then re-check.
 - **Clippy/test failures:** Fix the code and re-validate.
 - **Only proceed when validation passes.**
 
@@ -78,7 +78,7 @@ After the restack completes:
    ```
 2. **Optionally walk the remaining stack to validate PRs** (if the user wants full confidence). Start from the current PR and walk upward:
    ```bash
-   while cfmt -- --check && cargo clippy -p <CRATE_FLAGS> --all-targets -- -D warnings && cargo nextest run -p <CRATE_FLAGS> && gt up; do :; done
+   while scripts/rust_fmt.sh -- --check && cargo clippy -p <CRATE_FLAGS> --all-targets -- -D warnings && cargo nextest run -p <CRATE_FLAGS> && gt up; do :; done
    ```
 
 ## Step 7: Submit

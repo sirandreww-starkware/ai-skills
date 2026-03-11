@@ -26,7 +26,7 @@ Validate the current PR and walk upward through the stack, fixing CI failures, a
 Starting from the current PR, run a loop that validates and walks up. The loop stops at the first failure:
 
 ```bash
-while cfmt -- --check && cargo clippy -p <CRATE_FLAGS> --all-targets -- -D warnings && cargo nextest run -p <CRATE_FLAGS> && gt up; do :; done
+while scripts/rust_fmt.sh -- --check && cargo clippy -p <CRATE_FLAGS> --all-targets -- -D warnings && cargo nextest run -p <CRATE_FLAGS> && gt up; do :; done
 ```
 
 Replace `<CRATE_FLAGS>` with the appropriate `-p` arguments (e.g. `-p apollo_propeller` or `-p crate_a -p crate_b`).
@@ -41,14 +41,14 @@ Determine which case by checking `gt up` output or re-running the validation com
 
 Read the error output to understand the failure:
 
-- **Formatting:** Run `cfmt` (without `--check`) to auto-fix.
+- **Formatting:** Run `scripts/rust_fmt.sh` (without `--check`) to auto-fix.
 - **Clippy:** Read the warnings/errors, fix the code.
 - **Tests:** Read the failure output, fix the code.
 
 After fixing, re-run the full validation line to confirm:
 
 ```bash
-cfmt -- --check && cargo clippy -p <CRATE_FLAGS> --all-targets -- -D warnings && cargo nextest run -p <CRATE_FLAGS>
+scripts/rust_fmt.sh -- --check && cargo clippy -p <CRATE_FLAGS> --all-targets -- -D warnings && cargo nextest run -p <CRATE_FLAGS>
 ```
 
 Repeat until validation passes.
@@ -67,7 +67,7 @@ Once validation passes on the current PR:
    1. Resolve the merge conflicts in affected files. Incorporate both sides honestly -- do not drop TODOs or features.
    2. Validate the conflicting PR's crate(s):
       ```bash
-      cfmt -- --check && cargo clippy -p <CRATE_FLAGS> --all-targets -- -D warnings && cargo nextest run -p <CRATE_FLAGS>
+      scripts/rust_fmt.sh -- --check && cargo clippy -p <CRATE_FLAGS> --all-targets -- -D warnings && cargo nextest run -p <CRATE_FLAGS>
       ```
    3. If validation fails, fix and re-validate.
    4. Stage and continue:
@@ -82,7 +82,7 @@ Once validation passes on the current PR:
 After the amend and restack complete, continue the validation walk from the current position:
 
 ```bash
-while cfmt -- --check && cargo clippy -p <CRATE_FLAGS> --all-targets -- -D warnings && cargo nextest run -p <CRATE_FLAGS> && gt up; do :; done
+while scripts/rust_fmt.sh -- --check && cargo clippy -p <CRATE_FLAGS> --all-targets -- -D warnings && cargo nextest run -p <CRATE_FLAGS> && gt up; do :; done
 ```
 
 If another failure is found, go back to Step 3. Otherwise, if you've reached the top, proceed to Step 6.

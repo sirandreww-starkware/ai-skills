@@ -27,16 +27,15 @@ You are tasked with fetching code review comments for the current branch, planni
 
 Fetch review data to determine what requires action.
 
-1.  **Fetch Top-Level Reviews:**
+1.  **Fetch Top-Level Reviews** (raw JSON, no `--jq` — jq quoting breaks in non-interactive bash):
     ```bash
-    gh api "repos/{owner}/{repo}/pulls/{pr_number}/reviews" \
-      --jq '.[] | select(.body != "") | {id: .id, author: .user.login, state: .state, body: .body}'
+    gh api repos/{owner}/{repo}/pulls/{pr_number}/reviews
     ```
 2.  **Fetch Inline Comments:**
     ```bash
-    gh api "repos/{owner}/{repo}/pulls/{pr_number}/comments" \
-      --jq '.[] | {id: .id, author: .user.login, path: .path, line: .line, body: .body, in_reply_to_id: .in_reply_to_id, created_at: .created_at}'
+    gh api repos/{owner}/{repo}/pulls/{pr_number}/comments
     ```
+    Parse the JSON output yourself to extract the relevant fields (id, author, path, line, body, in_reply_to_id, created_at, state).
 
 ### Step 2.2: Read code
 
@@ -86,10 +85,10 @@ Apply the changes based on the agreed plan.
 
 Run the validation suite for the specific crate:
 ```bash
-cfmt -- --check && cargo clippy -p <CRATE> --all-targets -- -D warnings && cargo nextest run -p <CRATE>
+scripts/rust_fmt.sh -- --check && cargo clippy -p <CRATE> --all-targets -- -D warnings && cargo nextest run -p <CRATE>
 ```
 
-You can fix formatting issues by running `cfmt`
+You can fix formatting issues by running `scripts/rust_fmt.sh`
 
 * **If Validation Fails:** Fix the errors and re-run validation until it passes.
 * **If Validation Passes:** Proceed to Step 6.
@@ -110,7 +109,7 @@ If `gt m` pauses due to conflicts (or during the rebase process):
 1. **Resolve:** Fix the merge conflicts in the affected files (make sure to not lose TODOs or features, incorprate both changes as honestly as posible).
 2. **Validate (Crucial):** Run the validation command **again** on the affected crate to ensure the conflict resolution didn't break logic.
 ```bash
-cfmt -- --check && cargo clippy -p <CRATE> --all-targets -- -D warnings && cargo nextest run -p <CRATE>
+scripts/rust_fmt.sh -- --check && cargo clippy -p <CRATE> --all-targets -- -D warnings && cargo nextest run -p <CRATE>
 ```
 
 3. **Continue:** Only when validation passes, stage and continue:
