@@ -1,5 +1,5 @@
 ---
-name: fix-stack
+name: fix-stack-ci
 description: Walk a Graphite PR stack upward from the current PR, running CI validation (formatting, clippy, tests) on each PR and fixing failures. Use when the user says "fix stack", "fix CI", "walk the stack", "validate stack", or wants to ensure PRs in a Graphite stack pass CI.
 ---
 
