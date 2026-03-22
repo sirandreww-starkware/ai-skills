@@ -23,19 +23,26 @@ Validate the current PR and walk upward through the stack, fixing CI failures, a
 
 ## Step 2: Walk Up & Validate
 
-Starting from the current PR, run a loop that validates and walks up. The loop stops at the first failure:
+Starting from the current PR, run a loop that validates and walks up. The loop stops at the first failure or when you reach the top of the stack.
+
+**Important:** `gt up` returns exit code 0 even when already at the top of the stack. To detect the top, compare the branch name before and after `gt up`. If it didn't change, you've reached the top.
 
 ```bash
-while scripts/rust_fmt.sh --check && cargo clippy -p <CRATE_FLAGS> --all-targets -- -D warnings && cargo nextest run -p <CRATE_FLAGS> && gt up; do :; done
+while scripts/rust_fmt.sh --check && cargo clippy -p <CRATE_FLAGS> --all-targets -- -D warnings && cargo nextest run -p <CRATE_FLAGS>; do
+  BEFORE=$(git branch --show-current)
+  gt up
+  AFTER=$(git branch --show-current)
+  if [ "$BEFORE" = "$AFTER" ]; then break; fi
+done
 ```
 
 Replace `<CRATE_FLAGS>` with the appropriate `-p` arguments (e.g. `-p apollo_propeller` or `-p crate_a -p crate_b`).
 
 **If the loop exits**, one of two things happened:
 - **A validation step failed** -- proceed to Step 3.
-- **`gt up` failed because you're at the top** -- every PR from here up is green. Skip to Step 6.
+- **The branch didn't change after `gt up`** (top of stack reached) -- every PR from here up is green. Skip to Step 6.
 
-Determine which case by checking `gt up` output or re-running the validation command alone.
+Determine which case by checking whether validation passed (re-run the validation command alone if needed).
 
 ## Step 3: Fix the Failure
 
@@ -82,10 +89,15 @@ Once validation passes on the current PR:
 After the amend and restack complete, continue the validation walk from the current position:
 
 ```bash
-while scripts/rust_fmt.sh --check && cargo clippy -p <CRATE_FLAGS> --all-targets -- -D warnings && cargo nextest run -p <CRATE_FLAGS> && gt up; do :; done
+while scripts/rust_fmt.sh --check && cargo clippy -p <CRATE_FLAGS> --all-targets -- -D warnings && cargo nextest run -p <CRATE_FLAGS>; do
+  BEFORE=$(git branch --show-current)
+  gt up
+  AFTER=$(git branch --show-current)
+  if [ "$BEFORE" = "$AFTER" ]; then break; fi
+done
 ```
 
-If another failure is found, go back to Step 3. Otherwise, if you've reached the top, proceed to Step 6.
+If another failure is found, go back to Step 3. Otherwise, if the branch didn't change after `gt up` (top of stack), proceed to Step 6.
 
 ## Step 6: Submit & Report
 
