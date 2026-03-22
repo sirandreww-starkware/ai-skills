@@ -103,6 +103,8 @@ gt add -A && gt m && gt status
 
 ```
 
+**IMPORTANT:** Never pass `-m` to `gt m` — it changes the commit message. Use plain `gt m` to amend only the content.
+
 *This submits the changes and triggers a restack of child PRs.*
 2. **Handle Restack Conflicts:**
 If `gt m` pauses due to conflicts (or during the rebase process):

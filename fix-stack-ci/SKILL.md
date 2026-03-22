@@ -68,6 +68,8 @@ Once validation passes on the current PR:
    ```bash
    gt add -A && gt m
    ```
+   **IMPORTANT:** Never pass `-m` to `gt m` — it changes the commit message. Use plain `gt m` to amend only the content.
+
    This amends the current PR's commit and triggers a restack of child PRs.
 
 2. **Handle restack conflicts.** If `gt m` pauses due to conflicts:
