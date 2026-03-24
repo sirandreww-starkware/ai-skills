@@ -72,14 +72,10 @@ If the next branch also has conflicts, go back to Step 2. Continue this loop unt
 
 After the restack completes:
 
-1. **Check the stack is clean:**
-   ```bash
-   gt status
-   ```
-2. **Optionally walk the remaining stack to validate PRs** (if the user wants full confidence). Start from the current PR and walk upward:
-   ```bash
-   while scripts/rust_fmt.sh --check && cargo clippy -p <CRATE_FLAGS> --all-targets -- -D warnings && cargo nextest run -p <CRATE_FLAGS> && gt up; do :; done
-   ```
+**Check the stack is clean:**
+```bash
+gt status
+```
 
 ## Step 7: Submit
 
