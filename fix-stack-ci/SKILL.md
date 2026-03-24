@@ -23,7 +23,7 @@ Validate the current PR and walk upward through the stack, fixing CI failures, a
 
 ## Step 2: Walk Up & Validate
 
-Starting from the current PR, run a loop that validates and walks up. The loop stops at the first failure or when you reach the top of the stack.
+**MANDATORY:** Run the validation as a SINGLE `while` loop in ONE Bash tool call. Do NOT run fmt, clippy, and tests as separate commands. Do NOT run them one PR at a time manually. Copy the loop below, substitute `<CRATE_FLAGS>`, and execute it in one shot. The loop stops at the first failure or when you reach the top of the stack.
 
 **Important:** `gt up` returns exit code 0 even when already at the top of the stack. To detect the top, compare the branch name before and after `gt up`. If it didn't change, you've reached the top.
 
@@ -88,7 +88,7 @@ Once validation passes on the current PR:
 
 ## Step 5: Continue Walking Up
 
-After the amend and restack complete, continue the validation walk from the current position:
+After the amend and restack complete, continue the validation walk from the current position. **MANDATORY:** Use the same single `while` loop as Step 2 — do NOT run commands individually per PR.
 
 ```bash
 while scripts/rust_fmt.sh --check && cargo clippy -p <CRATE_FLAGS> --all-targets -- -D warnings && cargo nextest run -p <CRATE_FLAGS>; do
