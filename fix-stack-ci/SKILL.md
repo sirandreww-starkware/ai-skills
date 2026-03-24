@@ -33,8 +33,10 @@ while scripts/rust_fmt.sh --check && cargo clippy -p <CRATE_FLAGS> --all-targets
   gt up
   AFTER=$(git branch --show-current)
   if [ "$BEFORE" = "$AFTER" ]; then break; fi
-done
+done 2>&1 | tail -30
 ```
+
+**IMPORTANT:** The `2>&1 | tail -30` at the end is mandatory — it keeps output manageable by showing only the last 30 lines. This is critical for long-running validation across many PRs.
 
 Replace `<CRATE_FLAGS>` with the appropriate `-p` arguments (e.g. `-p apollo_propeller` or `-p crate_a -p crate_b`).
 
@@ -96,7 +98,7 @@ while scripts/rust_fmt.sh --check && cargo clippy -p <CRATE_FLAGS> --all-targets
   gt up
   AFTER=$(git branch --show-current)
   if [ "$BEFORE" = "$AFTER" ]; then break; fi
-done
+done 2>&1 | tail -30
 ```
 
 If another failure is found, go back to Step 3. Otherwise, if the branch didn't change after `gt up` (top of stack), proceed to Step 6.
