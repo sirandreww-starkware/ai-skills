@@ -45,7 +45,11 @@ Run the `/fix-stack-ci` skill from the bottom of the stack to ensure every PR pa
 
 Follow all steps in `/fix-stack-ci` (identify crates, walk up & validate, fix failures, amend & restack, continue walking). **Do not submit at the end of fix-stack-ci** — skip the submit step.
 
-**Important:** The walk-up loop must detect the top of the stack by comparing branch names before and after `gt up`. If the branch didn't change, you've reached the top:
+**MANDATORY:** Run the validation as a SINGLE `while` loop in ONE Bash tool call. Do NOT run fmt, clippy, and tests as separate commands. Do NOT run them one PR at a time manually. Copy the loop below, substitute `<CRATE_FLAGS>`, and execute it in one shot. The loop stops at the first failure or when you reach the top of the stack.
+
+**Anti-pattern:** Do not run `scripts/rust_fmt.sh`, then `cargo clippy`, then `cargo nextest run`, then `gt up` as separate Bash tool calls. This defeats the purpose of the loop and wastes tool calls and user approvals.
+
+**Important:** `gt up` returns exit code 0 even when already at the top of the stack. To detect the top, compare the branch name before and after `gt up`. If it didn't change, you've reached the top.
 
 ```bash
 while scripts/rust_fmt.sh --check && cargo clippy -p <CRATE_FLAGS> --all-targets -- -D warnings && cargo nextest run -p <CRATE_FLAGS>; do
