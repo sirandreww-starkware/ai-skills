@@ -25,7 +25,8 @@ run "commitlint"  "fix commit message to match 'scope: subject' format" \
 pr_title=$(gh pr view --json title --jq .title 2>/dev/null || true)
 if [ -n "$pr_title" ]; then
   commit_msg=$(git log -1 --format=%s)
-  run "pr title match" "run: gh pr edit --title \"$commit_msg\"" \
+  pr_number=$(gh pr view --json number --jq .number)
+  run "pr title match" "run: gh api repos/{owner}/{repo}/pulls/$pr_number -f title=\"$commit_msg\" --method PATCH" \
     test "$commit_msg" = "$pr_title"
 fi
 
