@@ -14,7 +14,7 @@ while true; do
     exit 1
   fi
   BEFORE=$(git branch --show-current)
-  gt up
+  gt up > /dev/null 2>&1
   AFTER=$(git branch --show-current)
   if [ "$BEFORE" = "$AFTER" ]; then exit 0; fi
 done
