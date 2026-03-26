@@ -19,7 +19,7 @@ run() {
 }
 
 run "commitlint"  "fix commit message to match 'scope: subject' format" \
-  bash -c 'git log -1 --format=%s | commitlint --verbose'
+  bash -c 'git log -1 --format=%s | npx commitlint --verbose'
 
 run "rustfmt"     "scripts/rust_fmt.sh" \
   scripts/rust_fmt.sh --check
