@@ -57,7 +57,7 @@ while ~/.claude/skills/fix-stack-ci/scripts/validate.sh <CRATE_FLAGS>; do
   gt up
   AFTER=$(git branch --show-current)
   if [ "$BEFORE" = "$AFTER" ]; then break; fi
-done
+done 2>&1 | tail -30
 ```
 
 After the full stack passes CI, navigate back to the bottom:

@@ -1,7 +1,9 @@
 #!/bin/bash
+set -euo pipefail
 # Validate a PR: commitlint, formatting, clippy, tests, unused deps.
 # Usage: validate.sh -p crate_a [-p crate_b ...]
 # Output: "PASSED" on success, "Failed: <step>\nTry: <fix>" on failure.
+# Must be run from the project root (scripts/ paths are relative).
 
 run() {
   local name="$1" fix="$2"
@@ -26,7 +28,7 @@ run "taplo"       "scripts/taplo.sh" \
   scripts/taplo.sh
 
 run "cargo lock"  "cargo update to regenerate Cargo.lock" \
-  cargo metadata --locked --format-version=1
+  bash -c 'cargo metadata --locked --format-version=1 > /dev/null'
 
 run "clippy"      "fix the clippy warnings above" \
   cargo clippy "$@" --all-targets -- -D warnings

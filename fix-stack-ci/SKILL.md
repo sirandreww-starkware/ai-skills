@@ -15,9 +15,9 @@ The validation script is at `~/.claude/skills/fix-stack-ci/scripts/validate.sh`.
    ```bash
    gt ls -s
    ```
-2. **Identify the crate(s) under test.** Ask the user which crate(s) are being worked on. If the user isn't sure, infer from changed files on the current branch:
+2. **Identify the crate(s) under test.** Find which crate(s) were changed. Identify the top branch name from `gt ls -s` output, then diff against it to find all changed files across the stack:
    ```bash
-   git diff HEAD^ --name-only
+   git diff <STACK_TOP_BRANCH> --name-only
    ```
    Crate names come from `crates/<crate_name>/`. Collect all unique crate names across the stack if needed.
 
@@ -92,6 +92,8 @@ Once validation passes on the current PR:
       gt cont
       ```
    5. Repeat until the entire stack is restacked.
+
+   **Escape hatch:** If a conflict or validation failure persists after 3 attempts on the same PR, stop and report the situation to the user rather than continuing to loop.
 
 ## Step 5: Continue Walking Up
 
