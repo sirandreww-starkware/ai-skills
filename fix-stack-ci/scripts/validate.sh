@@ -21,6 +21,14 @@ run() {
 run "commitlint"  "fix commit message to match 'scope: subject' format" \
   bash -c 'git log -1 --format=%s | npx commitlint --verbose'
 
+# Check commit message matches remote PR title (skip if no PR exists)
+pr_title=$(gh pr view --json title --jq .title 2>/dev/null || true)
+if [ -n "$pr_title" ]; then
+  commit_msg=$(git log -1 --format=%s)
+  run "pr title match" "run: gh pr edit --title \"$commit_msg\"" \
+    test "$commit_msg" = "$pr_title"
+fi
+
 run "rustfmt"     "scripts/rust_fmt.sh" \
   scripts/rust_fmt.sh --check
 
