@@ -25,20 +25,11 @@ The validation script is at `~/.claude/skills/fix-stack-ci/scripts/validate.sh`.
 
 ## Step 2: Walk Up & Validate
 
-**MANDATORY:** Run the validation as a SINGLE `while` loop in ONE Bash tool call. Do NOT run fmt, clippy, and tests as separate commands. Do NOT run them one PR at a time manually. Copy the loop below, substitute `<CRATE_FLAGS>`, and execute it in one shot. The loop stops at the first failure or when you reach the top of the stack.
-
-**Important:** `gt up` returns exit code 0 even when already at the top of the stack. To detect the top, compare the branch name before and after `gt up`. If it didn't change, you've reached the top.
+**MANDATORY:** Run the validation walk as a SINGLE command in ONE Bash tool call. Do NOT run fmt, clippy, and tests as separate commands. Do NOT run them one PR at a time manually. The script validates the current PR, moves up with `gt up`, and repeats until the top of the stack or the first failure.
 
 ```bash
-while ~/.claude/skills/fix-stack-ci/scripts/validate.sh <CRATE_FLAGS>; do
-  BEFORE=$(git branch --show-current)
-  gt up
-  AFTER=$(git branch --show-current)
-  if [ "$BEFORE" = "$AFTER" ]; then break; fi
-done 2>&1 | tail -30
+~/.claude/skills/fix-stack-ci/scripts/while_validate.sh <CRATE_FLAGS>
 ```
-
-**IMPORTANT:** The `2>&1 | tail -30` at the end is mandatory — it keeps output manageable by showing only the last 30 lines. This is critical for long-running validation across many PRs.
 
 Replace `<CRATE_FLAGS>` with the appropriate `-p` arguments (e.g. `-p apollo_propeller` or `-p crate_a -p crate_b`).
 
@@ -97,18 +88,13 @@ Once validation passes on the current PR:
 
 ## Step 5: Continue Walking Up
 
-After the amend and restack complete, continue the validation walk from the current position. **MANDATORY:** Use the same single `while` loop as Step 2 — do NOT run commands individually per PR.
+After the amend and restack complete, continue the validation walk from the current position. **MANDATORY:** Use the same `while_validate.sh` script as Step 2 — do NOT run commands individually per PR.
 
 ```bash
-while ~/.claude/skills/fix-stack-ci/scripts/validate.sh <CRATE_FLAGS>; do
-  BEFORE=$(git branch --show-current)
-  gt up
-  AFTER=$(git branch --show-current)
-  if [ "$BEFORE" = "$AFTER" ]; then break; fi
-done 2>&1 | tail -30
+~/.claude/skills/fix-stack-ci/scripts/while_validate.sh <CRATE_FLAGS>
 ```
 
-If another failure is found, go back to Step 3. Otherwise, if the branch didn't change after `gt up` (top of stack), proceed to Step 6.
+If another failure is found, go back to Step 3. Otherwise, if the top of the stack was reached, proceed to Step 6.
 
 ## Step 6: Submit & Report
 

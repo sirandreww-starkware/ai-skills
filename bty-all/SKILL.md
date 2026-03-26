@@ -45,19 +45,12 @@ Run the `/fix-stack-ci` skill from the bottom of the stack to ensure every PR pa
 
 Follow all steps in `/fix-stack-ci` (identify crates, walk up & validate, fix failures, amend & restack, continue walking). **Do not submit at the end of fix-stack-ci** — skip the submit step.
 
-**MANDATORY:** Run the validation as a SINGLE `while` loop in ONE Bash tool call. Do NOT run fmt, clippy, and tests as separate commands. Do NOT run them one PR at a time manually. Copy the loop below, substitute `<CRATE_FLAGS>`, and execute it in one shot. The loop stops at the first failure or when you reach the top of the stack.
+**MANDATORY:** Run the validation walk as a SINGLE command in ONE Bash tool call. Do NOT run fmt, clippy, and tests as separate commands. Do NOT run them one PR at a time manually. The script validates each PR and walks up the stack automatically. It stops at the first failure or when the top is reached.
 
-**Anti-pattern:** Do not run validation checks as separate Bash tool calls. This defeats the purpose of the loop and wastes tool calls and user approvals.
-
-**Important:** `gt up` returns exit code 0 even when already at the top of the stack. To detect the top, compare the branch name before and after `gt up`. If it didn't change, you've reached the top.
+**Anti-pattern:** Do not run validation checks as separate Bash tool calls. This defeats the purpose of the script and wastes tool calls and user approvals.
 
 ```bash
-while ~/.claude/skills/fix-stack-ci/scripts/validate.sh <CRATE_FLAGS>; do
-  BEFORE=$(git branch --show-current)
-  gt up
-  AFTER=$(git branch --show-current)
-  if [ "$BEFORE" = "$AFTER" ]; then break; fi
-done 2>&1 | tail -30
+~/.claude/skills/fix-stack-ci/scripts/while_validate.sh <CRATE_FLAGS>
 ```
 
 After the full stack passes CI, navigate back to the bottom:
