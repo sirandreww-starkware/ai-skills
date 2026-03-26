@@ -53,6 +53,8 @@ Follow all steps in `/fix-stack-ci` (identify crates, walk up & validate, fix fa
 ~/.claude/skills/fix-stack-ci/scripts/while_validate.sh <CRATE_FLAGS>
 ```
 
+**IMPORTANT:** Do NOT pipe the validation scripts through `2>&1 | tail -30`. The scripts manage their own output.
+
 After the full stack passes CI, navigate back to the bottom:
 ```bash
 gt bottom

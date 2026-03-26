@@ -31,6 +31,8 @@ The validation script is at `~/.claude/skills/fix-stack-ci/scripts/validate.sh`.
 ~/.claude/skills/fix-stack-ci/scripts/while_validate.sh <CRATE_FLAGS>
 ```
 
+**IMPORTANT:** Do NOT pipe the validation scripts through `2>&1 | tail -30`. The scripts manage their own output.
+
 Replace `<CRATE_FLAGS>` with the appropriate `-p` arguments (e.g. `-p apollo_propeller` or `-p crate_a -p crate_b`).
 
 **If the loop exits**, one of two things happened:
