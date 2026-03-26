@@ -26,7 +26,7 @@ pr_title=$(gh pr view --json title --jq .title 2>/dev/null || true)
 if [ -n "$pr_title" ]; then
   commit_msg=$(git log -1 --format=%s)
   pr_number=$(gh pr view --json number --jq .number)
-  run "pr title match" "run: gh api repos/{owner}/{repo}/pulls/$pr_number -f title=\"$commit_msg\" --method PATCH" \
+  run "pr title match" "run: gh api repos/{owner}/{repo}/pulls/$pr_number -f title=\"$commit_msg\" --method PATCH (or if the commit message is wrong: gt m -m \"$pr_title\")" \
     test "$commit_msg" = "$pr_title"
 fi
 
