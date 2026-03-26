@@ -46,11 +46,13 @@ For each conflicting file:
 After resolving all conflicts in the current PR, run the full validation suite:
 
 ```bash
-scripts/rust_fmt.sh --check && cargo clippy -p <CRATE_FLAGS> --all-targets -- -D warnings && cargo nextest run -p <CRATE_FLAGS>
+~/.claude/skills/fix-stack-ci/scripts/validate.sh <CRATE_FLAGS>
 ```
 
 - **Formatting issues:** Run `scripts/rust_fmt.sh` to auto-fix, then re-check.
+- **Taplo:** Run `scripts/taplo.sh` to auto-fix TOML formatting.
 - **Clippy/test failures:** Fix the code and re-validate.
+- **Machete:** Remove unused dependencies from `Cargo.toml` files.
 - **Only proceed when validation passes.**
 
 ## Step 4: Stage & Continue

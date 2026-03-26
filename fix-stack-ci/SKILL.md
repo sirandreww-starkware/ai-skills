@@ -7,6 +7,8 @@ description: Walk a Graphite PR stack upward from the current PR, running CI val
 
 Validate the current PR and walk upward through the stack, fixing CI failures, amending, restacking, and continuing until every PR from here to the top is green.
 
+The validation script is at `~/.claude/skills/fix-stack-ci/scripts/validate.sh`. It runs commitlint, formatting, clippy, and tests in sequence. It takes the same `-p` crate flags as cargo commands.
+
 ## Step 1: Identify Stack & Crates
 
 1. **Show the stack:**
@@ -28,7 +30,7 @@ Validate the current PR and walk upward through the stack, fixing CI failures, a
 **Important:** `gt up` returns exit code 0 even when already at the top of the stack. To detect the top, compare the branch name before and after `gt up`. If it didn't change, you've reached the top.
 
 ```bash
-while scripts/rust_fmt.sh --check && cargo clippy -p <CRATE_FLAGS> --all-targets -- -D warnings && cargo nextest run -p <CRATE_FLAGS>; do
+while ~/.claude/skills/fix-stack-ci/scripts/validate.sh <CRATE_FLAGS>; do
   BEFORE=$(git branch --show-current)
   gt up
   AFTER=$(git branch --show-current)
@@ -50,14 +52,17 @@ Determine which case by checking whether validation passed (re-run the validatio
 
 Read the error output to understand the failure:
 
+- **Commitlint:** Fix the commit message to match the format `scope[,scope2,...]: subject`. Use `gt m` to amend the commit message.
 - **Formatting:** Run `scripts/rust_fmt.sh` (without `--check`) to auto-fix.
+- **Taplo:** Run `scripts/taplo.sh` to auto-fix TOML formatting.
 - **Clippy:** Read the warnings/errors, fix the code.
 - **Tests:** Read the failure output, fix the code.
+- **Machete:** Remove unused dependencies from `Cargo.toml` files.
 
-After fixing, re-run the full validation line to confirm:
+After fixing, re-run the validation to confirm:
 
 ```bash
-scripts/rust_fmt.sh --check && cargo clippy -p <CRATE_FLAGS> --all-targets -- -D warnings && cargo nextest run -p <CRATE_FLAGS>
+~/.claude/skills/fix-stack-ci/scripts/validate.sh <CRATE_FLAGS>
 ```
 
 Repeat until validation passes.
@@ -78,7 +83,7 @@ Once validation passes on the current PR:
    1. Resolve the merge conflicts in affected files. Incorporate both sides honestly -- do not drop TODOs or features.
    2. Validate the conflicting PR's crate(s):
       ```bash
-      scripts/rust_fmt.sh --check && cargo clippy -p <CRATE_FLAGS> --all-targets -- -D warnings && cargo nextest run -p <CRATE_FLAGS>
+      ~/.claude/skills/fix-stack-ci/scripts/validate.sh <CRATE_FLAGS>
       ```
    3. If validation fails, fix and re-validate.
    4. Stage and continue:
@@ -93,7 +98,7 @@ Once validation passes on the current PR:
 After the amend and restack complete, continue the validation walk from the current position. **MANDATORY:** Use the same single `while` loop as Step 2 — do NOT run commands individually per PR.
 
 ```bash
-while scripts/rust_fmt.sh --check && cargo clippy -p <CRATE_FLAGS> --all-targets -- -D warnings && cargo nextest run -p <CRATE_FLAGS>; do
+while ~/.claude/skills/fix-stack-ci/scripts/validate.sh <CRATE_FLAGS>; do
   BEFORE=$(git branch --show-current)
   gt up
   AFTER=$(git branch --show-current)

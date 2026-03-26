@@ -47,12 +47,12 @@ Follow all steps in `/fix-stack-ci` (identify crates, walk up & validate, fix fa
 
 **MANDATORY:** Run the validation as a SINGLE `while` loop in ONE Bash tool call. Do NOT run fmt, clippy, and tests as separate commands. Do NOT run them one PR at a time manually. Copy the loop below, substitute `<CRATE_FLAGS>`, and execute it in one shot. The loop stops at the first failure or when you reach the top of the stack.
 
-**Anti-pattern:** Do not run `scripts/rust_fmt.sh`, then `cargo clippy`, then `cargo nextest run`, then `gt up` as separate Bash tool calls. This defeats the purpose of the loop and wastes tool calls and user approvals.
+**Anti-pattern:** Do not run validation checks as separate Bash tool calls. This defeats the purpose of the loop and wastes tool calls and user approvals.
 
 **Important:** `gt up` returns exit code 0 even when already at the top of the stack. To detect the top, compare the branch name before and after `gt up`. If it didn't change, you've reached the top.
 
 ```bash
-while scripts/rust_fmt.sh --check && cargo clippy -p <CRATE_FLAGS> --all-targets -- -D warnings && cargo nextest run -p <CRATE_FLAGS>; do
+while ~/.claude/skills/fix-stack-ci/scripts/validate.sh <CRATE_FLAGS>; do
   BEFORE=$(git branch --show-current)
   gt up
   AFTER=$(git branch --show-current)
