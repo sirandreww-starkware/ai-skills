@@ -1,5 +1,5 @@
 ---
-description: Walk a Graphite PR stack upward from the current PR, running CI validation (formatting, clippy, tests) on each PR and fixing failures. Use when the user says "fix stack", "fix CI", "walk the stack", "validate stack", or wants to ensure PRs in a Graphite stack pass CI.
+description: "Walk a Graphite PR stack upward from the current PR, running CI validation (formatting, clippy, tests) on each PR and fixing failures. Use when the user says 'fix stack', 'fix CI', 'walk the stack', 'validate stack', or wants to ensure PRs in a Graphite stack pass CI."
 ---
 
 # Fix Stack CI
@@ -44,12 +44,7 @@ Determine which case by checking whether validation passed (re-run `/validate` a
 
 Read the error output to understand the failure:
 
-- **Commitlint:** Fix the commit message to match the format `scope[,scope2,...]: subject`. Use `gt m -m "new message"` to amend the commit message.
-- **Formatting:** Run `scripts/rust_fmt.sh` (without `--check`) to auto-fix.
-- **Taplo:** Run `scripts/taplo.sh` to auto-fix TOML formatting.
-- **Clippy:** Read the warnings/errors, fix the code.
-- **Tests:** Read the failure output, fix the code.
-- **Machete:** Remove unused dependencies from `Cargo.toml` files.
+The `/validate` output includes the failing step and a suggested fix command. Follow those suggestions to resolve the failure.
 
 After fixing, re-run `/validate` to confirm:
 

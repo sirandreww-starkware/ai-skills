@@ -46,9 +46,7 @@ Run `/validate` on the affected crate(s):
 ~/.claude/skills/validate/scripts/validate.sh -p <CRATE>
 ```
 
-You can fix formatting issues by running `scripts/rust_fmt.sh`.
-
-* **If Validation Fails:** Fix the errors and re-run validation until it passes.
+* **If Validation Fails:** Fix the errors and re-run validation until it passes. The `/validate` output includes fix suggestions for each failure type.
 * **If Validation Passes:** Proceed to Step 5.
 
 ## Step 5: Amend & Restack

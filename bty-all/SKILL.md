@@ -65,10 +65,7 @@ For each PR:
 
 Once all PRs have been addressed:
 
-1. **Submit the entire stack:**
-   ```bash
-   gt s --no-interactive --no-edit
-   ```
+1. **Submit the entire stack** by running `/submit`. Follow all steps in that skill.
 
 2. **Report to the user:**
    - List of PRs and the action taken on each (comments addressed, skipped, deferred).

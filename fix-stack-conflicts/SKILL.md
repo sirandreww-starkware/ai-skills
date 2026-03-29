@@ -50,11 +50,7 @@ After resolving all conflicts in the current PR, run `/validate`:
 ~/.claude/skills/validate/scripts/validate.sh <CRATE_FLAGS>
 ```
 
-- **Formatting issues:** Run `scripts/rust_fmt.sh` to auto-fix, then re-check.
-- **Taplo:** Run `scripts/taplo.sh` to auto-fix TOML formatting.
-- **Clippy/test failures:** Fix the code and re-validate.
-- **Machete:** Remove unused dependencies from `Cargo.toml` files.
-- **Only proceed when validation passes.**
+The `/validate` output includes the failing step and a suggested fix command. Fix any failures and re-validate until it passes. Only proceed when validation passes.
 
 ## Step 4: Stage & Continue
 

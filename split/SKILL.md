@@ -1,5 +1,5 @@
 ---
-description: Split monolithic branches into logical PR stacks. Use when user says "split this branch into PRs", "break up my changes", "create a PR stack", "split stack", "make this reviewable", or has a large branch with many changes that needs to be broken into smaller, reviewable pieces.
+description: "Split monolithic branches into logical PR stacks. Use when user says 'split this branch into PRs', 'break up my changes', 'create a PR stack', 'split stack', 'make this reviewable', or has a large branch with many changes that needs to be broken into smaller, reviewable pieces."
 allowed-tools: Bash(git rev-parse:*), Bash(git log:*), Bash(git diff:*), Bash(git status:*), Bash(git check-ref-format:*), Bash(git ls-files:*), Bash(git rev-list:*), Bash(git fetch:*), Bash(npx nx:*), Bash(which:*), Read(*), Grep(*), Glob(*), AskUserQuestion(*), Task(subagent_type:stack-splitter), mcp__graphite__run_gt_cmd(*), mcp__graphite__learn_gt(*), mcp__nx-mcp__nx_project_details(*)
 ---
 
