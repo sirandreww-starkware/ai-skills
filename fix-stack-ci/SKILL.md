@@ -1,10 +1,10 @@
 ---
-description: "Walk a Graphite PR stack upward from the current PR, running CI validation (formatting, clippy, tests) on each PR and fixing failures. Use when the user says 'fix stack', 'fix CI', 'walk the stack', 'validate stack', or wants to ensure PRs in a Graphite stack pass CI."
+description: "Walk a Graphite PR stack upward from the current PR, running CI validation (formatting, clippy, tests) on each PR and fixing failures. Use when the user says 'fix stack', 'fix stack CI', 'walk the stack', 'validate stack', or wants to ensure PRs in a Graphite stack pass CI."
 ---
 
 # Fix Stack CI
 
-Validate the current PR and walk upward through the stack, fixing CI failures, amending, restacking, and continuing until every PR from here to the top is green.
+Validate the current PR and walk upward through the stack, fixing CI failures until every PR from here to the top is green.
 
 This skill does not submit. The caller or user should submit when ready.
 
@@ -32,8 +32,6 @@ This skill does not submit. The caller or user should submit when ready.
 
 **IMPORTANT:** Do NOT pipe the validation scripts through `2>&1 | tail -30`. The scripts manage their own output.
 
-Replace `<CRATE_FLAGS>` with the appropriate `-p` arguments (e.g. `-p apollo_propeller` or `-p crate_a -p crate_b`).
-
 **If the loop exits**, one of two things happened:
 - **A validation step failed** -- proceed to Step 3.
 - **The branch didn't change after `gt up`** (top of stack reached) -- every PR from here up is green. Done.
@@ -42,25 +40,11 @@ Determine which case by checking whether validation passed (re-run `/validate` a
 
 ## Step 3: Fix the Failure
 
-Read the error output to understand the failure:
+Run `/fix-ci` to fix the current PR's CI failure. Follow all steps in that skill.
 
-The `/validate` output includes the failing step and a suggested fix command. Follow those suggestions to resolve the failure.
+## Step 4: Continue Walking Up
 
-After fixing, re-run `/validate` to confirm:
-
-```bash
-~/.claude/skills/validate/scripts/validate.sh <CRATE_FLAGS>
-```
-
-Repeat until validation passes.
-
-## Step 4: Amend & Restack
-
-Once validation passes, run `/amend-restack` to amend the commit and handle any restack conflicts. Follow all steps in `/amend-restack`.
-
-## Step 5: Continue Walking Up
-
-After the amend and restack complete, continue the validation walk from the current position. **MANDATORY:** Use the same `while_validate.sh` script as Step 2.
+After `/fix-ci` completes, continue the validation walk from the current position. **MANDATORY:** Use the same `while_validate.sh` script as Step 2.
 
 ```bash
 ~/.claude/skills/fix-stack-ci/scripts/while_validate.sh <CRATE_FLAGS>
