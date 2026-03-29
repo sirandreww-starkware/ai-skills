@@ -39,6 +39,7 @@ for i in $(seq 0 $((PR_COUNT - 1))); do
     REASONS=()
 
     # --- Check 1: Unresponded reviewer comments (skip resolved threads) ---
+    # gh api --jq does not support --arg, so pipe to jq separately.
     UNRESPONDED_THREADS=$(gh api graphql -f query='
       query($owner: String!, $repo: String!, $pr: Int!) {
         repository(owner: $owner, name: $repo) {
@@ -54,7 +55,7 @@ for i in $(seq 0 $((PR_COUNT - 1))); do
           }
         }
       }' -f owner="$OWNER" -f repo="$REPO" -F pr="$PR_NUMBER" \
-      --jq --arg me "$MY_LOGIN" '
+      2>/dev/null | jq --arg me "$MY_LOGIN" '
         .data.repository.pullRequest.reviewThreads.nodes
         | map(select(.isResolved == false))
         | map(select(.comments.nodes | length > 0))
@@ -66,8 +67,10 @@ for i in $(seq 0 $((PR_COUNT - 1))); do
     fi
 
     # --- Check 2: Latest commit fails CI ---
-    # Get the status of the latest commit on the PR
-    CI_STATE=$(gh pr checks "$PR_NUMBER" --json bucket --jq '[.[] | select(.bucket == "fail")] | length' 2>/dev/null || echo "0")
+    # gh pr checks does not support --json on gh <2.49; parse text output instead.
+    # gh pr checks exits 1 when checks fail, so || true prevents pipefail from
+    # triggering the outer fallback and producing a multi-line value.
+    CI_STATE=$( (gh pr checks "$PR_NUMBER" 2>/dev/null || true) | awk -F'\t' '$2 == "fail"' | wc -l)
     if [ "$CI_STATE" -gt 0 ]; then
         REASONS+=("CI failing ($CI_STATE check(s) failed)")
     fi
