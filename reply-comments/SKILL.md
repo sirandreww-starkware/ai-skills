@@ -8,16 +8,24 @@ Post replies to PR review comment threads via the GitHub API. Replies posted thi
 
 ## Usage
 
-For each comment thread that was addressed, compose a reply and post it:
+Choose the type based on the `path` field from `/fetch-pr-comments` output:
+
+- **`path` is not null** → `inline` (file-level review comment)
+- **`path` is null** → `top-level` (Reviewable discussion) — **cannot be replied to via this script**
 
 ```bash
-~/.claude/skills/reply-comments/scripts/reply_comment.sh <COMMENT_ID> "<BODY>"
+# Inline review comment
+~/.claude/skills/reply-comments/scripts/reply_comment.sh inline <COMMENT_ID> "<BODY>"
 ```
 
 - `COMMENT_ID` — the `thread_id` from `/fetch-pr-comments` output
 - `BODY` — the reply text
 
 The script auto-detects the PR number from the current branch and the repo from `gh`.
+
+## Top-level Reviewable Discussions
+
+Top-level discussions (`path == null`) are threaded server-side by Reviewable. Replies posted through the GitHub API won't thread correctly. For these, inform the user that they need to reply via Reviewable directly.
 
 ## Writing Good Replies
 
@@ -30,4 +38,4 @@ Keep replies short. The code diff speaks for itself.
 
 ## Batch Replies
 
-After `/bty` addresses multiple threads, reply to each one. For each thread in the `/fetch-pr-comments` output that was acted on, call the script with the appropriate `thread_id` and a reply summarizing the action taken.
+After `/bty` addresses multiple threads, reply to each one. For inline threads, call the script. For top-level threads, inform the user to reply via Reviewable.
