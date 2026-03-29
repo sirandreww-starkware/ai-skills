@@ -11,10 +11,10 @@ This skill assumes you have already made code changes and validated them with `/
 ## Step 1: Amend the Commit
 
 ```bash
-gt add -A && gt m && gt status
+gt m -a && gt status
 ```
 
-**IMPORTANT:** Never pass `-m` to `gt m` — it changes the commit message. Use plain `gt m` to amend only the content.
+**IMPORTANT:** Never pass `-m` to `gt m` — it changes the commit message. Use `gt m -a` to stage all changes and amend in one step.
 
 This amends the current PR's commit and triggers a restack of child PRs.
 

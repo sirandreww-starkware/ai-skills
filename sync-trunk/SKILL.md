@@ -6,19 +6,15 @@ description: "Rebase the current Graphite stack on the latest trunk (main). Use 
 
 Fetch the latest trunk and rebase the current stack on it, resolving any conflicts that arise.
 
-## Step 1: Fetch & Restack
+## Step 1: Sync & Restack
 
-1. **Fetch latest trunk:**
-   ```bash
-   git fetch origin main
-   ```
+Sync all branches with remote, fetch latest trunk, and restack:
 
-2. **Restack onto updated trunk:**
-   ```bash
-   gt restack
-   ```
+```bash
+gt sync
+```
 
-   If the restack completes cleanly, skip to Step 3.
+If the sync completes cleanly, skip to Step 3.
 
 ## Step 2: Resolve Conflicts
 

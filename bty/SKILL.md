@@ -6,6 +6,10 @@ description: "Fetch PR review comments, plan fixes with user, validate, and rest
 
 Fetch code review comments for the current branch, plan fixes with the user, apply changes, and ensure the stack remains valid throughout the Graphite restacking process.
 
+## Stack Awareness
+
+This PR may be part of a Graphite stack. Before applying fixes, check child PRs in the stack (`gt ls`) — a reviewer's suggestion may already be addressed in a later PR. In that case, reply explaining where it's handled rather than duplicating the change. Conversely, avoid making changes that conflict with work already done up-stack.
+
 ## Step 1: Fetch & Filter Comments
 
 Run `/fetch-pr-comments` to get actionable review threads. Follow all steps in that skill:
