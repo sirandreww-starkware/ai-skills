@@ -51,15 +51,25 @@ Run `/validate` on the affected crate(s):
 
 Run `/amend-restack` to commit the changes and handle any restack conflicts. Follow all steps in that skill.
 
-## Step 6: Submit
+## Step 6: Post-Amend Validation
+
+Re-run `/validate` on the affected crate(s) to confirm the amend and restack didn't break anything:
+
+```bash
+~/.claude/skills/validate/scripts/validate.sh -p <CRATE>
+```
+
+If validation fails, fix the errors, re-validate, and re-amend (repeat Steps 5-6 until clean).
+
+## Step 7: Submit
 
 Run `/submit` to push the stack to the remote. The updated code must be visible before notifying reviewers.
 
-## Step 7: Reply to Reviewers
+## Step 8: Reply to Reviewers
 
-Run `/reply-comments` to post replies to each addressed thread. For each comment that was acted on, reply with a short summary of what was done (e.g., "Refactored into two functions for clarity" or "Added a TODO — will address in follow-up").
+Run `/reply-comments` to present the reply table. This step stops the run so the user can post replies via Reviewable.
 
-## Step 8: Final Report
+## Step 9: Final Report
 
 Provide a summary:
 

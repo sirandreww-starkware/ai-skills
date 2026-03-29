@@ -1,41 +1,39 @@
 ---
-description: "Reply to PR review comments. Presents a table of proposed replies with Reviewable links for the user to post manually. Atomic skill used by /bty after addressing review feedback."
+description: "Reply to PR review comments. Presents a table of proposed replies with Reviewable links for the user to post manually. Stops the run so the user has time to post. Atomic skill used by /bty after addressing review feedback."
 ---
 
 # Reply to Review Comments
 
-Present proposed replies to PR review comment threads as a table for the user to post via Reviewable.
+Present proposed replies to PR review comment threads as a table for the user to post via Reviewable. **This skill stops the run after presenting the table** so the user has time to open each link and post the replies.
 
-## Usage
+## Steps
 
-For each comment thread that was addressed, build a table row with:
+1. Get `OWNER/REPO` and `PR_NUMBER`:
+   ```bash
+   OWNER_REPO=$(gh repo view --json nameWithOwner --jq .nameWithOwner)
+   PR_NUMBER=$(gh pr list --head "$(git branch --show-current)" --json number --jq '.[0].number')
+   ```
 
-1. **Thread** — short description (e.g., the reviewer's ask)
-2. **Reply** — the proposed response text
-3. **Link** — Reviewable link to the thread
+2. For each addressed comment thread, build a row using the `thread_id` from `/fetch-pr-comments` output.
 
-### Building the Reviewable Link
+3. Present the table, then **stop and wait for the user** before continuing any parent skill (e.g., `/bty`).
 
-The link format is:
+## Table Format
+
+Use aligned columns. The Reply column contains the exact text the user should paste.
+
+```
+ #  | Thread                  | Reply                                           | Link
+----|-------------------------|-------------------------------------------------|------
+ 1  | Rename this variable    | Done — renamed to `validate_input`.             | https://reviewable.io/reviews/org/repo/42#-123456
+ 2  | Split this function     | Refactored into two functions. PTAL.            | https://reviewable.io/reviews/org/repo/42#-789012
+```
+
+The Reviewable link format is:
 
 ```
 https://reviewable.io/reviews/<OWNER>/<REPO>/<PR_NUMBER>#-<COMMENT_ID>
 ```
-
-Get `OWNER/REPO` from `gh repo view --json nameWithOwner --jq .nameWithOwner` and `PR_NUMBER` from the current branch. The `COMMENT_ID` is the `thread_id` from `/fetch-pr-comments` output.
-
-### Output Format
-
-Present the table to the user:
-
-```
-| # | Thread | Reply | Link |
-|---|--------|-------|------|
-| 1 | Rename this variable | Done — renamed to `validate_input`. | [reviewable](https://reviewable.io/reviews/org/repo/42#-123456) |
-| 2 | Split this function  | Refactored into two functions. PTAL. | [reviewable](https://reviewable.io/reviews/org/repo/42#-789012) |
-```
-
-The user will open each link and post the reply themselves.
 
 ## Writing Good Replies
 
@@ -45,3 +43,7 @@ The user will open each link and post the reply themselves.
 - **Disagreements:** Explain the reasoning. Be respectful and concise.
 
 Keep replies short. The code diff speaks for itself.
+
+## Stopping Behavior
+
+After presenting the table, **stop the run**. Do not continue to the next step of the parent skill. The user will resume when they are done posting replies.
