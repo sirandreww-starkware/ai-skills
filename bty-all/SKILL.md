@@ -4,53 +4,57 @@ description: "Find all open PRs that need attention and fix them. Handles unresp
 
 # BTY All — Fix All PRs Needing Attention
 
-Discover all open PRs that need attention and fix them by dispatching to the appropriate skill.
+Discover and fix PRs one at a time. After fixing each PR, re-run discovery to verify it no longer needs attention before moving on.
 
-## Step 1: Discover PRs
+## Loop
 
-Run `/attention-prs` to find PRs needing action:
+Repeat the following steps until `/attention-prs` reports no PRs needing attention.
+
+### Step 1: Discover Next PR
+
+Request a single PR from `/attention-prs`:
 
 ```bash
-~/.claude/skills/attention-prs/scripts/find_prs.sh
+~/.claude/skills/attention-prs/scripts/find_prs.sh 1
 ```
 
-Present the results to the user, grouped by urgency:
-- **CI failures** — these block merging
-- **Unresponded review comments** — these block approval
-- **Multiple commits** — these need squashing before merge
+**No PRs found:** All done. Go to the Final Report.
 
-If no PRs need attention, inform the user and stop.
+Present the flagged PR and its reasons to the user. Ask for confirmation before proceeding.
 
-## Step 2: Confirm Scope
+### Step 2: Fix the PR
 
-Ask the user which PRs to fix. Options:
-- **All** — fix every flagged PR
-- **Selective** — the user picks specific PRs or categories
-
-**Wait for user confirmation before proceeding.**
-
-## Step 3: Fix Each PR
-
-For each PR to fix, check out the branch:
+Check out the branch:
 
 ```bash
 git checkout <BRANCH_NAME>
 ```
 
-Then dispatch based on the reason(s) it was flagged:
+Dispatch based on the reason(s) it was flagged:
 
-- **CI failing** → run `/fix-ci`. Follow all steps in that skill.
-- **Unresponded review comments** → run `/bty`. Follow all steps in that skill.
-- **Multiple commits** → run `/squash`. Follow all steps in that skill.
+- **CI failing** -> run `/fix-ci`. Follow all steps in that skill.
+- **Unresponded review comments** -> run `/bty`. Follow all steps in that skill.
+- **Multiple commits** -> run `/squash`. Follow all steps in that skill.
 
-If a PR has multiple reasons, fix them in this order: CI first, then reviews, then squash.
+If the PR has multiple reasons, fix them in this order: CI first, then reviews, then squash.
 
-`/bty` submits and replies to reviewers on its own. For other dispatches (`/fix-ci`, `/squash`), run `/submit` after fixing.
+`/bty` submits on its own. For other dispatches (`/fix-ci`, `/squash`), run `/submit` after fixing.
 
-## Step 4: Report
+### Step 3: Re-verify
+
+Run `/attention-prs` again for the same PR to confirm it is no longer flagged:
+
+```bash
+~/.claude/skills/attention-prs/scripts/find_prs.sh 1
+```
+
+- **PR is gone from results:** It was fixed. Loop back to Step 1 for the next PR.
+- **Same PR reappears (no new reviewer activity):** Something in the fix or skill pipeline didn't resolve the issue. Stop the loop, report the situation to the user, and suggest which skill may need a change (e.g., `/fix-ci` didn't actually fix the failing check, `/squash` left multiple commits, `/bty` replied but didn't address the comment). Do not retry the same PR blindly.
+
+## Final Report
 
 Provide a summary:
 
-- List of PRs and the action taken on each.
+- List of PRs fixed and the action taken on each.
 - Any PRs that were skipped or could not be fixed.
-- Confirmation that fixes were submitted.
+- Confirmation that all fixes were submitted.

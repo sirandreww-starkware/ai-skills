@@ -10,8 +10,9 @@ Run the discovery script and present the results to the user.
 
 1. **Run the script:**
     ```bash
-    ~/.claude/skills/attention-prs/scripts/find_prs.sh
+    ~/.claude/skills/attention-prs/scripts/find_prs.sh [MAX_COUNT]
     ```
+    `MAX_COUNT` is optional. When provided, the script stops after reporting that many flagged PRs. Omit it to report all.
 
 2. **Present results:** Show the user which PRs were flagged and why. Group by urgency:
    - **CI failures** — these block merging

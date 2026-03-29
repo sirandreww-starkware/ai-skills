@@ -4,8 +4,13 @@
 #   1. Unresponded reviewer comments (last comment in thread is not by author)
 #   2. Latest commit fails CI
 #   3. More than one commit in PR history
+#
+# Usage: find_prs.sh [MAX_COUNT]
+#   MAX_COUNT: optional, stop after reporting this many flagged PRs (default: unlimited)
 
 set -euo pipefail
+
+MAX_COUNT="${1:-0}"  # 0 means unlimited
 
 OWNER_REPO=$(gh repo view --json nameWithOwner --jq .nameWithOwner)
 OWNER="${OWNER_REPO%/*}"
@@ -22,6 +27,7 @@ if [ "$PR_COUNT" -eq 0 ]; then
 fi
 
 FLAGGED_ANY=false
+FLAGGED_COUNT=0
 
 for i in $(seq 0 $((PR_COUNT - 1))); do
     PR_NUMBER=$(echo "$PR_DATA" | jq -r ".[$i].number")
@@ -64,6 +70,7 @@ for i in $(seq 0 $((PR_COUNT - 1))); do
     # --- Report ---
     if [ ${#REASONS[@]} -gt 0 ]; then
         FLAGGED_ANY=true
+        FLAGGED_COUNT=$((FLAGGED_COUNT + 1))
         echo "========================================"
         echo "PR #$PR_NUMBER: $PR_TITLE"
         echo "  URL: $PR_URL"
@@ -73,6 +80,9 @@ for i in $(seq 0 $((PR_COUNT - 1))); do
             echo "    - $reason"
         done
         echo ""
+        if [ "$MAX_COUNT" -gt 0 ] && [ "$FLAGGED_COUNT" -ge "$MAX_COUNT" ]; then
+            break
+        fi
     fi
 done
 
