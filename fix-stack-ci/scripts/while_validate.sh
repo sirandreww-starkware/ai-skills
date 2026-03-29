@@ -6,11 +6,9 @@ set -euo pipefail
 # Prints the current branch before each validation run.
 # Exit code: 0 if all PRs passed, 1 if a validation failure occurred.
 
-SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
-
 while true; do
   echo "--- Validating: $(git branch --show-current) ---"
-  if ! "$SCRIPT_DIR/validate.sh" "$@"; then
+  if ! "$HOME/.claude/skills/validate/scripts/validate.sh" "$@"; then
     exit 1
   fi
   BEFORE=$(git branch --show-current)

@@ -1,11 +1,12 @@
 ---
-name: fix-stack-conflicts
-description: Resolve merge conflicts in a Graphite PR stack after amending a mid-stack PR or rebasing on an updated trunk. Walks through each conflicting PR, resolves conflicts, validates with CI checks, and continues the restack. Use when the user says "fix conflicts", "resolve conflicts", "restack", "gt restack", "continue restack", or when a Graphite rebase/restack has paused due to conflicts.
+description: "Resolve merge conflicts in a Graphite PR stack after amending a mid-stack PR or rebasing on an updated trunk. Walks through each conflicting PR, resolves conflicts, validates with CI checks, and continues the restack. Use when the user says \"fix conflicts\", \"resolve conflicts\", \"restack\", \"gt restack\", \"continue restack\", or when a Graphite rebase/restack has paused due to conflicts."
 ---
 
 # Fix Stack Conflicts
 
 Resolve conflicts in a Graphite PR stack and get it back to a clean state.
+
+This skill does not submit. The caller or user should submit when ready.
 
 ## Step 1: Assess the Situation
 
@@ -20,7 +21,7 @@ Resolve conflicts in a Graphite PR stack and get it back to a clean state.
    ```bash
    git diff --name-only HEAD
    ```
-   Crate names come from `crates/<crate_name>/`.
+   Crate names come from `crates/<crate_name>/`. Collect all unique crate names and build `-p` flags (e.g. `-p crate_a -p crate_b`).
 
 3. **See the conflicts:**
    ```bash
@@ -43,10 +44,10 @@ For each conflicting file:
 
 ## Step 3: Validate
 
-After resolving all conflicts in the current PR, run the full validation suite:
+After resolving all conflicts in the current PR, run `/validate`:
 
 ```bash
-~/.claude/skills/fix-stack-ci/scripts/validate.sh <CRATE_FLAGS>
+~/.claude/skills/validate/scripts/validate.sh <CRATE_FLAGS>
 ```
 
 - **Formatting issues:** Run `scripts/rust_fmt.sh` to auto-fix, then re-check.
@@ -74,15 +75,8 @@ If the next branch also has conflicts, go back to Step 2. Continue this loop unt
 
 After the restack completes:
 
-**Check the stack is clean:**
 ```bash
 gt status
-```
-
-## Step 7: Submit
-
-```bash
-gt s --no-interactive --no-edit
 ```
 
 Report to the user which branches had conflicts and how they were resolved.
