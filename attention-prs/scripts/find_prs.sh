@@ -38,18 +38,29 @@ for i in $(seq 0 $((PR_COUNT - 1))); do
 
     REASONS=()
 
-    # --- Check 1: Unresponded reviewer comments ---
-    COMMENTS=$(gh api "repos/$OWNER/$REPO/pulls/$PR_NUMBER/comments" --paginate 2>/dev/null || echo "[]")
-    # Group by thread: root comments have no in_reply_to_id, replies reference the root
-    # Find threads where the last comment is NOT by the PR author
-    UNRESPONDED_THREADS=$(echo "$COMMENTS" | jq -r --arg me "$MY_LOGIN" '
-        # Build threads: group by root comment id
-        group_by(.in_reply_to_id // .id)
-        | map(sort_by(.created_at))
-        | map(select(length > 0))
-        | map(select(.[-1].user.login != $me))
+    # --- Check 1: Unresponded reviewer comments (skip resolved threads) ---
+    UNRESPONDED_THREADS=$(gh api graphql -f query='
+      query($owner: String!, $repo: String!, $pr: Int!) {
+        repository(owner: $owner, name: $repo) {
+          pullRequest(number: $pr) {
+            reviewThreads(first: 100) {
+              nodes {
+                isResolved
+                comments(first: 100) {
+                  nodes { author { login } }
+                }
+              }
+            }
+          }
+        }
+      }' -f owner="$OWNER" -f repo="$REPO" -F pr="$PR_NUMBER" \
+      --jq --arg me "$MY_LOGIN" '
+        .data.repository.pullRequest.reviewThreads.nodes
+        | map(select(.isResolved == false))
+        | map(select(.comments.nodes | length > 0))
+        | map(select(.comments.nodes[-1].author.login != $me))
         | length
-    ')
+      ' 2>/dev/null || echo "0")
     if [ "$UNRESPONDED_THREADS" -gt 0 ]; then
         REASONS+=("Has $UNRESPONDED_THREADS unresponded review thread(s)")
     fi

@@ -23,17 +23,37 @@ OWNER_REPO=$(gh repo view --json nameWithOwner --jq .nameWithOwner)
 OWNER="${OWNER_REPO%/*}"
 REPO="${OWNER_REPO#*/}"
 
+# Fetch resolved thread root comment IDs via GraphQL (REST API lacks resolution status)
+RESOLVED_IDS=$(gh api graphql -f query='
+  query($owner: String!, $repo: String!, $pr: Int!) {
+    repository(owner: $owner, name: $repo) {
+      pullRequest(number: $pr) {
+        reviewThreads(first: 100) {
+          nodes {
+            isResolved
+            comments(first: 1) {
+              nodes { databaseId }
+            }
+          }
+        }
+      }
+    }
+  }' -f owner="$OWNER" -f repo="$REPO" -F pr="$PR_NUMBER" \
+  --jq '[.data.repository.pullRequest.reviewThreads.nodes[] | select(.isResolved) | .comments.nodes[0].databaseId]' 2>/dev/null || echo "[]")
+
 # Fetch inline review comments (these are the line-level comments)
 COMMENTS=$(gh api "repos/$OWNER/$REPO/pulls/$PR_NUMBER/comments" --paginate 2>/dev/null || echo "[]")
 
 # Fetch top-level reviews (for review-level comments that aren't inline)
 REVIEWS=$(gh api "repos/$OWNER/$REPO/pulls/$PR_NUMBER/reviews" --paginate 2>/dev/null || echo "[]")
 
-# Process inline comments: group by thread, filter for actionable threads
-ACTIONABLE_THREADS=$(echo "$COMMENTS" | jq -r --arg me "$MY_LOGIN" '
+# Process inline comments: group by thread, filter out resolved and already-responded
+ACTIONABLE_THREADS=$(echo "$COMMENTS" | jq -r --arg me "$MY_LOGIN" --argjson resolved "$RESOLVED_IDS" '
   # Group comments into threads by root comment id
   group_by(.in_reply_to_id // .id)
   | map(sort_by(.created_at))
+  # Exclude resolved threads (root comment id is in resolved list)
+  | map(select((.[0].in_reply_to_id // .[0].id) as $root | ($resolved | index($root)) == null))
   # Keep threads where last comment is NOT by the PR author (actionable)
   | map(select(.[-1].user.login != $me))
   # Format each thread
