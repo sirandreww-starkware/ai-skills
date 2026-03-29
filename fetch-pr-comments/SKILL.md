@@ -1,15 +1,17 @@
 ---
-description: "Fetch and filter actionable PR review comments for the current branch. Atomic skill used by other skills."
+description: "Fetch and filter actionable PR review comments. Accepts an optional branch name; defaults to the current branch. Atomic skill used by other skills."
 ---
 
 # Fetch PR Comments
 
-Fetch review comments for the current branch's PR, filter for actionable threads, and present them for triage.
+Fetch review comments for a PR, filter for actionable threads, and present them for triage.
 
 ## Step 1: Run the Script
 
+The script accepts an optional branch name argument. If omitted, it uses the current branch.
+
 ```bash
-~/.claude/skills/fetch-pr-comments/scripts/fetch_comments.sh
+~/.claude/skills/fetch-pr-comments/scripts/fetch_comments.sh [branch-name]
 ```
 
 The script outputs a JSON array of actionable review threads. Each thread has:

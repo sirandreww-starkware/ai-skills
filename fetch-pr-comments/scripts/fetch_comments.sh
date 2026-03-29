@@ -7,7 +7,7 @@
 
 set -euo pipefail
 
-BRANCH=$(git branch --show-current)
+BRANCH="${1:-$(git branch --show-current)}"
 
 # Find the PR for this branch
 PR_JSON=$(gh pr list --head "$BRANCH" --json number,author --limit 1)
