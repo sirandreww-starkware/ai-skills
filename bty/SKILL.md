@@ -6,8 +6,6 @@ description: "Fetch PR review comments, plan fixes with user, validate, and rest
 
 Fetch code review comments for the current branch, plan fixes with the user, apply changes, and ensure the stack remains valid throughout the Graphite restacking process.
 
-This skill does not submit. The caller or user should submit when ready.
-
 ## Step 1: Fetch & Filter Comments
 
 Run `/fetch-pr-comments` to get actionable review threads. Follow all steps in that skill:
@@ -49,15 +47,19 @@ Run `/validate` on the affected crate(s):
 * **If Validation Fails:** Fix the errors and re-run validation until it passes. The `/validate` output includes fix suggestions for each failure type.
 * **If Validation Passes:** Proceed to Step 5.
 
-## Step 5: Reply to Reviewers
-
-Run `/reply-comments` to post replies to each addressed thread. For each comment that was acted on, reply with a short summary of what was done (e.g., "Refactored into two functions for clarity" or "Added a TODO — will address in follow-up").
-
-## Step 6: Amend & Restack
+## Step 5: Amend & Restack
 
 Run `/amend-restack` to commit the changes and handle any restack conflicts. Follow all steps in that skill.
 
-## Step 7: Final Report
+## Step 6: Submit
+
+Run `/submit` to push the stack to the remote. The updated code must be visible before notifying reviewers.
+
+## Step 7: Reply to Reviewers
+
+Run `/reply-comments` to post replies to each addressed thread. For each comment that was acted on, reply with a short summary of what was done (e.g., "Refactored into two functions for clarity" or "Added a TODO — will address in follow-up").
+
+## Step 8: Final Report
 
 Provide a summary:
 

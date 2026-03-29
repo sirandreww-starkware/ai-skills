@@ -45,7 +45,7 @@ Then dispatch based on the reason(s) it was flagged:
 
 If a PR has multiple reasons, fix them in this order: CI first, then reviews, then squash.
 
-After fixing, run `/submit` to push the changes.
+`/bty` submits and replies to reviewers on its own. For other dispatches (`/fix-ci`, `/squash`), run `/submit` after fixing.
 
 ## Step 4: Report
 
