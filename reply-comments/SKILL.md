@@ -1,41 +1,47 @@
 ---
-description: "Reply to PR review comments via the GitHub API. Replies appear in both GitHub and Reviewable. Atomic skill used by /bty after addressing review feedback."
+description: "Reply to PR review comments. Presents a table of proposed replies with Reviewable links for the user to post manually. Atomic skill used by /bty after addressing review feedback."
 ---
 
 # Reply to Review Comments
 
-Post replies to PR review comment threads via the GitHub API. Replies posted this way appear in both GitHub and Reviewable.
+Present proposed replies to PR review comment threads as a table for the user to post via Reviewable.
 
 ## Usage
 
-Choose the type based on the `path` field from `/fetch-pr-comments` output:
+For each comment thread that was addressed, build a table row with:
 
-- **`path` is not null** → `inline` (file-level review comment)
-- **`path` is null** → `top-level` (Reviewable discussion) — **cannot be replied to via this script**
+1. **Thread** — short description (e.g., the reviewer's ask)
+2. **Reply** — the proposed response text
+3. **Link** — Reviewable link to the thread
 
-```bash
-# Inline review comment
-~/.claude/skills/reply-comments/scripts/reply_comment.sh inline <COMMENT_ID> "<BODY>"
+### Building the Reviewable Link
+
+The link format is:
+
+```
+https://reviewable.io/reviews/<OWNER>/<REPO>/<PR_NUMBER>#-<COMMENT_ID>
 ```
 
-- `COMMENT_ID` — the `thread_id` from `/fetch-pr-comments` output
-- `BODY` — the reply text
+Get `OWNER/REPO` from `gh repo view --json nameWithOwner --jq .nameWithOwner` and `PR_NUMBER` from the current branch. The `COMMENT_ID` is the `thread_id` from `/fetch-pr-comments` output.
 
-The script auto-detects the PR number from the current branch and the repo from `gh`.
+### Output Format
 
-## Top-level Reviewable Discussions
+Present the table to the user:
 
-Top-level discussions (`path == null`) are threaded server-side by Reviewable. Replies posted through the GitHub API won't thread correctly. For these, inform the user that they need to reply via Reviewable directly.
+```
+| # | Thread | Reply | Link |
+|---|--------|-------|------|
+| 1 | Rename this variable | Done — renamed to `validate_input`. | [reviewable](https://reviewable.io/reviews/org/repo/42#-123456) |
+| 2 | Split this function  | Refactored into two functions. PTAL. | [reviewable](https://reviewable.io/reviews/org/repo/42#-789012) |
+```
+
+The user will open each link and post the reply themselves.
 
 ## Writing Good Replies
 
 - **Code changes:** Briefly state what was changed. Example: "Done — renamed `process_data` to `validate_input` and split the function."
-- **Refactors:** Explain the approach. Example: "Refactored this into two functions for clarity. PTAL."
+- **Refactors:** Explain the approach. Example: "Refactored into two functions for clarity. PTAL."
 - **Deferred work:** Note the TODO. Example: "Added a TODO for this — too risky to change mid-stack. Will address in a follow-up PR."
 - **Disagreements:** Explain the reasoning. Be respectful and concise.
 
 Keep replies short. The code diff speaks for itself.
-
-## Batch Replies
-
-After `/bty` addresses multiple threads, reply to each one. For inline threads, call the script. For top-level threads, inform the user to reply via Reviewable.
