@@ -17,8 +17,18 @@ OWNER="${OWNER_REPO%/*}"
 REPO="${OWNER_REPO#*/}"
 MY_LOGIN=$(gh api user --jq '.login')
 
-# Fetch all open PRs authored by me
-PR_DATA=$(gh pr list --author "$MY_LOGIN" --state open --json number,title,url,headRefName,baseRefName --limit 100)
+# Fetch all open PRs authored by me, sorted closest-to-main first.
+# PRs based on main have depth 0, PRs based on those have depth 1, etc.
+PR_DATA=$(gh pr list --author "$MY_LOGIN" --state open --json number,title,url,headRefName,baseRefName --limit 100 \
+  | jq '
+    # Build a map from branch name to base branch
+    (map({(.headRefName): .baseRefName}) | add // {}) as $bases |
+    # Compute stack depth: walk baseRefName chain until we hit a non-PR branch (e.g. main)
+    def depth(branch):
+      if $bases[branch] then 1 + depth($bases[branch]) else 0 end;
+    map(. + {stack_depth: depth(.headRefName)})
+    | sort_by(.stack_depth)
+  ')
 PR_COUNT=$(echo "$PR_DATA" | jq length)
 
 if [ "$PR_COUNT" -eq 0 ]; then
@@ -35,6 +45,7 @@ for i in $(seq 0 $((PR_COUNT - 1))); do
     PR_URL=$(echo "$PR_DATA" | jq -r ".[$i].url")
     PR_HEAD=$(echo "$PR_DATA" | jq -r ".[$i].headRefName")
     PR_BASE=$(echo "$PR_DATA" | jq -r ".[$i].baseRefName")
+    STACK_DEPTH=$(echo "$PR_DATA" | jq -r ".[$i].stack_depth")
 
     REASONS=()
 
@@ -90,7 +101,7 @@ for i in $(seq 0 $((PR_COUNT - 1))); do
         echo "========================================"
         echo "PR #$PR_NUMBER: $PR_TITLE"
         echo "  URL: $PR_URL"
-        echo "  Branch: $PR_HEAD -> $PR_BASE"
+        echo "  Branch: $PR_HEAD -> $PR_BASE (stack depth: $STACK_DEPTH)"
         echo "  Reasons:"
         for reason in "${REASONS[@]}"; do
             echo "    - $reason"
