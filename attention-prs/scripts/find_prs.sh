@@ -19,16 +19,43 @@ MY_LOGIN=$(gh api user --jq '.login')
 
 # Fetch all open PRs authored by me, sorted closest-to-main first.
 # PRs based on main have depth 0, PRs based on those have depth 1, etc.
-PR_DATA=$(gh pr list --author "$MY_LOGIN" --state open --json number,title,url,headRefName,baseRefName --limit 100 \
-  | jq '
-    # Build a map from branch name to base branch
-    (map({(.headRefName): .baseRefName}) | add // {}) as $bases |
-    # Compute stack depth: walk baseRefName chain until we hit a non-PR branch (e.g. main)
-    def depth(branch):
-      if $bases[branch] then 1 + depth($bases[branch]) else 0 end;
-    map(. + {stack_depth: depth(.headRefName)})
-    | sort_by(.stack_depth)
-  ')
+#
+# Graphite rewrites some PRs' baseRefName to "graphite-base/N" (where N is the
+# PR's own number).  This breaks the branch-chain depth computation because no
+# PR has "graphite-base/N" as its headRefName.  To fix this we:
+#   1. Fetch headRefOid for each PR
+#   2. Bulk-fetch all graphite-base/* remote refs
+#   3. Resolve graphite-base/N → SHA → parent PR's headRefName
+PR_DATA_RAW=$(gh pr list --author "$MY_LOGIN" --state open \
+  --json number,title,url,headRefName,baseRefName,headRefOid --limit 100)
+
+# Build a JSON array of {ref, sha} for graphite-base/* branches.
+GRAPHITE_REFS=$(git ls-remote origin 'refs/heads/graphite-base/*' 2>/dev/null \
+  | jq -Rs '[split("\n") | .[] | select(length > 0)
+    | split("\t") | {sha: .[0], ref: (.[1] | ltrimstr("refs/heads/"))}]')
+
+PR_DATA=$(echo "$PR_DATA_RAW" | jq --argjson grefs "$GRAPHITE_REFS" '
+  # Map SHA → headRefName so we can resolve graphite-base refs to parent branches
+  (map({(.headRefOid): .headRefName}) | add // {}) as $sha_to_branch |
+  # Map graphite-base/N → SHA
+  ($grefs | map({(.ref): .sha}) | add // {}) as $gbase_to_sha |
+  # Resolve graphite-base/N baseRefName to the actual parent branch name
+  map(
+    if (.baseRefName | test("^graphite-base/")) then
+      ($gbase_to_sha[.baseRefName] // null) as $parent_sha |
+      if $parent_sha then
+        .baseRefName = ($sha_to_branch[$parent_sha] // .baseRefName)
+      else . end
+    else . end
+  ) |
+  # Build a map from branch name to base branch
+  (map({(.headRefName): .baseRefName}) | add // {}) as $bases |
+  # Compute stack depth: walk baseRefName chain until we hit a non-PR branch (e.g. main)
+  def depth(branch):
+    if $bases[branch] then 1 + depth($bases[branch]) else 0 end;
+  map(. + {stack_depth: depth(.headRefName)})
+  | sort_by(.stack_depth)
+')
 PR_COUNT=$(echo "$PR_DATA" | jq length)
 
 if [ "$PR_COUNT" -eq 0 ]; then
