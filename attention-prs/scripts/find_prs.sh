@@ -105,12 +105,13 @@ for i in $(seq 0 $((PR_COUNT - 1))); do
     fi
 
     # --- Check 2: Latest commit fails CI ---
-    # gh pr checks does not support --json on gh <2.49; parse text output instead.
-    # gh pr checks exits 1 when checks fail, so || true prevents pipefail from
-    # triggering the outer fallback and producing a multi-line value.
-    # Ignore merge-gatekeeper (downstream-only, fails when other checks fail)
-    # and stale/skipped runs (zero duration).
-    CI_STATE=$( (gh pr checks "$PR_NUMBER" 2>/dev/null || true) | awk -F'\t' '$2 == "fail" && $1 !~ /merge-gatekeeper/ && $3 != "0"' | wc -l)
+    # Use the check-runs API to get actual conclusions (distinguishes failure
+    # from cancelled, which gh pr checks conflates as "fail").
+    # Ignore merge-gatekeeper (downstream-only, fails when other checks fail).
+    HEAD_SHA=$(echo "$PR_DATA" | jq -r ".[$i].headRefOid")
+    CI_STATE=$(gh api "repos/$OWNER/$REPO/commits/$HEAD_SHA/check-runs" --paginate \
+      --jq '.check_runs[] | select(.conclusion == "failure") | select(.name != "merge-gatekeeper") | .name' \
+      2>/dev/null | wc -l)
     if [ "$CI_STATE" -gt 0 ]; then
         REASONS+=("CI failing ($CI_STATE check(s) failed)")
     fi
