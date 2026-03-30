@@ -71,7 +71,7 @@ Run `/submit` to push the stack to the remote. The updated code must be visible 
 
 ## Step 8: Reply to Reviewers
 
-Run `/reply-comments` to present the reply table. This step stops the run so the user can post replies via Reviewable.
+Invoke `/reply-comments` using the Skill tool. It will present a reply table and stop the run so the user can post replies via Reviewable.
 
 ## Step 9: Final Report
 
