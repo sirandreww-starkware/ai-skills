@@ -43,9 +43,7 @@ If `BEFORE` equals `AFTER`, the top of the stack has been reached. Proceed to St
 
 Otherwise, run `/prepare-pr` on the next PR.
 
-## Step 4: Submit & Verify
-
-Run `/submit` to push the final state of the full stack to the remote.
+## Step 4: Verify
 
 ```bash
 gt bottom

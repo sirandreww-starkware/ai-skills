@@ -6,7 +6,7 @@ description: "Fully prepare a single PR for review: self-review, address reviewe
 
 Fully prepare the current PR for review in a single pass: self-review against coding standards, address any outstanding reviewer comments, and ensure CI passes.
 
-This skill does not submit. The caller or user should submit when ready.
+This skill submits after completing all steps so the remote is always up to date.
 
 ## Step 1: Identify Crates
 
@@ -58,3 +58,7 @@ Run `/validate` on the affected crate(s) one final time to catch any regressions
 ```
 
 If validation fails, fix the errors and re-validate. Once passing, run `/amend-restack` if any new changes were made. Follow all steps in that skill.
+
+## Step 6: Submit
+
+Run `/submit` to push the stack to the remote.
