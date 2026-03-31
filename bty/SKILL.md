@@ -21,15 +21,28 @@ Run `/fetch-pr-comments` to get actionable review threads. Follow all steps in t
 
 **No Comments:** If no actionable comments remain, inform the user and stop.
 
+## Step 1.5: Assess Change Impact
+
+For each actionable comment, launch an `/assess-change` agent **in parallel** (one agent per comment, using the Agent tool with multiple concurrent calls). Each agent:
+
+1. Takes the comment text, file path, and line number
+2. Searches the codebase to trace the blast radius
+3. Drafts a concrete fix plan (which files, which lines, what changes)
+4. Returns: files affected, lines changed, crates involved, and a recommendation (amend vs insert-pr)
+
+Wait for all assessments to complete before proceeding to Step 2.
+
 ## Step 2: Plan with User ("Ask before you do")
 
-**Do not apply fixes yet.** Present the active comments to the user and ask for specific direction on each:
+**Do not apply fixes yet.** Present each comment with its `/assess-change` results: files affected, lines changed, crates involved, and the recommendation. Then ask for direction on each:
 
 1.  **Refactor (Preferred):** Is the reviewer confused? (See *Refactoring Strategy* below).
 2.  **Accept Suggestion:** Apply the requested change directly?
 3.  **Defer:** Is the fix too complex or risky? (See *Deferring Work* below).
 4.  **Reply Only:** Respond with text without changing code?
 5.  **Insert PR:** The fix requires a large change — file rename, restructure, or a small change that cascades across many files. Apply in a new PR inserted above the current one in the stack. (See *Phase 2* below).
+
+Pre-select the `/assess-change` recommendation for each comment (amend → options 1-4, insert-pr → option 5), but the user can override any classification.
 
 After the user confirms, group comments into two buckets:
 - **Amend group:** Comments handled with Refactor, Accept, Defer, or Reply Only — these go into the current PR.
@@ -50,6 +63,8 @@ Apply the Amend group changes based on the agreed plan.
 * **Refactoring Strategy (Answer with Code):** If a reviewer asks a question or expresses confusion, **do not just explain it in a reply.** Refactor the code to eliminate the confusion (rename variables, restructure logic, split functions). Code comments are a fallback; self-documenting code is the goal.
 * **Deferring Work:** If a fix is too large or creates massive conflicts up the stack, add a `TODO(AndrewL): ...` in the code to address it in a future PR.
 * **Standard Fixes:** Read the relevant file and apply the edit.
+
+Use the fix plans from `/assess-change` as a starting point — they list the specific files, lines, and changes needed.
 
 **Step 4a: Validate**
 
@@ -84,7 +99,7 @@ For each Insert PR comment, **one at a time** in the order the user confirmed:
 
 **Step 3b: Apply the Fix**
 
-Apply the changes for this single comment. You are on the current PR's branch (for the first insert) or the previously inserted branch (for subsequent inserts).
+Apply the changes for this single comment using the fix plan from `/assess-change`. You are on the current PR's branch (for the first insert) or the previously inserted branch (for subsequent inserts).
 
 **Step 4b: Validate**
 
