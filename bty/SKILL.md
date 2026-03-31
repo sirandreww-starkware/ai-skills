@@ -29,18 +29,29 @@ Run `/fetch-pr-comments` to get actionable review threads. Follow all steps in t
 2.  **Accept Suggestion:** Apply the requested change directly?
 3.  **Defer:** Is the fix too complex or risky? (See *Deferring Work* below).
 4.  **Reply Only:** Respond with text without changing code?
+5.  **Insert PR:** The fix requires a large change — file rename, restructure, or a small change that cascades across many files. Apply in a new PR inserted above the current one in the stack. (See *Phase 2* below).
+
+After the user confirms, group comments into two buckets:
+- **Amend group:** Comments handled with Refactor, Accept, Defer, or Reply Only — these go into the current PR.
+- **Insert PR group:** Comments flagged as Insert PR — each gets its own inserted PR.
 
 **Wait for user confirmation before proceeding.**
 
-## Step 3: Apply Fixes
+## Steps 3–6: Two-Phase Execution
 
-Apply the changes based on the agreed plan.
+### Phase 1: Small Fixes (Amend into Current PR)
+
+Skip this phase if there are no Amend group items.
+
+**Step 3a: Apply Fixes**
+
+Apply the Amend group changes based on the agreed plan.
 
 * **Refactoring Strategy (Answer with Code):** If a reviewer asks a question or expresses confusion, **do not just explain it in a reply.** Refactor the code to eliminate the confusion (rename variables, restructure logic, split functions). Code comments are a fallback; self-documenting code is the goal.
 * **Deferring Work:** If a fix is too large or creates massive conflicts up the stack, add a `TODO(AndrewL): ...` in the code to address it in a future PR.
 * **Standard Fixes:** Read the relevant file and apply the edit.
 
-## Step 4: Validate
+**Step 4a: Validate**
 
 Run `/validate` on the affected crate(s):
 
@@ -48,14 +59,14 @@ Run `/validate` on the affected crate(s):
 ~/.claude/skills/validate/scripts/validate.sh -p <CRATE>
 ```
 
-* **If Validation Fails:** Fix the errors and re-run validation until it passes. The `/validate` output includes fix suggestions for each failure type.
-* **If Validation Passes:** Proceed to Step 5.
+* **If Validation Fails:** Fix the errors and re-run validation until it passes.
+* **If Validation Passes:** Proceed to Step 5a.
 
-## Step 5: Amend & Restack
+**Step 5a: Amend & Restack**
 
 Run `/amend-restack` to commit the changes and handle any restack conflicts. Follow all steps in that skill.
 
-## Step 6: Post-Amend Validation
+**Step 6a: Post-Amend Validation**
 
 Re-run `/validate` on the affected crate(s) to confirm the amend and restack didn't break anything:
 
@@ -63,7 +74,49 @@ Re-run `/validate` on the affected crate(s) to confirm the amend and restack did
 ~/.claude/skills/validate/scripts/validate.sh -p <CRATE>
 ```
 
-If validation fails, fix the errors, re-validate, and re-amend (repeat Steps 5-6 until clean).
+If validation fails, fix the errors, re-validate, and re-amend (repeat Steps 5a-6a until clean).
+
+### Phase 2: Large Fixes (Insert PRs)
+
+Skip this phase if there are no Insert PR group items.
+
+For each Insert PR comment, **one at a time** in the order the user confirmed:
+
+**Step 3b: Apply the Fix**
+
+Apply the changes for this single comment. You are on the current PR's branch (for the first insert) or the previously inserted branch (for subsequent inserts).
+
+**Step 4b: Validate**
+
+Run `/validate` on the affected crate(s):
+
+```bash
+~/.claude/skills/validate/scripts/validate.sh -p <CRATE>
+```
+
+Fix errors and re-run until passing.
+
+**Step 5b: Insert PR**
+
+Run `/insert-pr` with a descriptive commit message following the repo's `scope: subject` commitlint format. The message should summarize the review feedback being addressed.
+
+**Step 6b: Post-Insert Validation**
+
+Re-run `/validate` to confirm the insert and any restack didn't break anything. If it fails, fix, re-validate, and re-insert (repeat Steps 5b-6b until clean).
+
+**Step 6c: Stay on the Inserted Branch**
+
+Remain on the newly inserted branch. The next Insert PR fix (if any) will build on top of this one. The resulting stack order is:
+
+```
+original-PR → insert-1 → insert-2 → ... → child-PR
+```
+
+After all Insert PR items are done, navigate back to the original PR's branch before proceeding to Step 7:
+
+```bash
+gt co <ORIGINAL_BRANCH>
+```
 
 ## Step 7: Submit
 
@@ -73,10 +126,13 @@ Run `/submit` to push the stack to the remote. The updated code must be visible 
 
 Invoke `/reply-comments` using the Skill tool. It will present a reply table and stop the run so the user can post replies via Reviewable.
 
+For comments addressed in the current PR, reply as usual ("Done — renamed X to Y."). For comments addressed in an inserted PR, note that the fix is in a follow-up PR in the stack and include the branch name. Example: "Addressed in a follow-up PR above this one in the stack (`branch-name`). Renamed the file and updated all references."
+
 ## Step 9: Final Report
 
 Provide a summary:
 
-* List of comments addressed and the action taken (Refactored/Fixed/Deferred).
+* List of comments addressed and the action taken (Refactored/Fixed/Deferred/Inserted PR).
+* For inserted PRs: the branch name of each inserted PR.
 * Confirmation that validation passed.
-* Status of the Graphite stack.
+* Final stack structure (`gt ls -s`).
