@@ -8,6 +8,8 @@ Fully prepare the current PR for review in a single pass: self-review against co
 
 This skill submits after completing all steps so the remote is always up to date.
 
+**CRITICAL: Do NOT fix issues that are already addressed in PRs above this one in the stack.** Reviews may flag things that a later PR intentionally handles. Fixing them here squashes the split and creates conflicts up-stack. When a review finding touches code that is modified in an upstack PR, skip that finding.
+
 ## Step 1: Identify Crates
 
 Identify which crate(s) were changed in this PR:
@@ -29,13 +31,14 @@ If both reviews report no issues, skip to Step 4.
 ## Step 3: Fix Review Findings
 
 1. Fix each finding in the code.
-2. Run `/validate` on the affected crate(s):
+2. **Check for upstack overlap:** Run `/check-upstack-overlap` to verify the fixes don't duplicate work in PRs above. If overlap is detected, revert the overlapping changes — those findings should be skipped since they're handled up-stack. Report the skipped findings to the user.
+3. Run `/validate` on the affected crate(s):
    ```bash
    ~/.claude/skills/validate/scripts/validate.sh <CRATE_FLAGS>
    ```
    Fix any validation failures and re-validate until passing.
-3. Run `/amend-restack` to commit the fixes. Follow all steps in that skill.
-4. **Re-review:** Run `/review` and `/shahak-review` again to verify all findings are addressed. If new violations appear, repeat this step. **Stop after 3 iterations maximum** -- if violations persist, report them to the user and continue to Step 4.
+4. Run `/amend-restack` to commit the fixes. Follow all steps in that skill.
+5. **Re-review:** Run `/review` and `/shahak-review` again to verify all findings are addressed. If new violations appear, repeat this step. **Stop after 3 iterations maximum** -- if violations persist, report them to the user and continue to Step 4.
 
 ## Step 4: Address Reviewer Comments
 
