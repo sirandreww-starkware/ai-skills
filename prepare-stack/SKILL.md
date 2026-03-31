@@ -53,5 +53,18 @@ gt status
 
 Report to the user:
 
-- Summary of findings fixed and comments addressed per PR.
+- Summary of self-review findings fixed per PR.
+- CI failures resolved per PR.
 - Confirmation that the full stack is green and submitted.
+
+### Comment Reply Guide
+
+Throughout the stack walk, track every reviewer comment encountered on each PR. At the end, present a consolidated reply guide grouped by PR (branch name). For each comment show:
+
+| PR | Reviewer | Comment (summarized) | Action Taken | Suggested Reply |
+|----|----------|---------------------|--------------|-----------------|
+
+- **Action Taken:** Refactored / Fixed / Deferred (with TODO) / Skipped (handled up-stack)
+- **Suggested Reply:** A concise reply the user can post on Reviewable, explaining what was done and where to look in the updated diff.
+
+This gives the user a single reference for any replies they haven't posted yet.

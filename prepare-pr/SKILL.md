@@ -50,7 +50,7 @@ Check for actionable review threads on the current PR:
 
 **No actionable comments:** Skip to Step 5.
 
-**Actionable comments found:** Run `/bty`. Follow all steps in that skill. `/bty` validates, amend-restacks, submits, and invokes `/reply-comments` which **stops the run** so the user can post replies via Reviewable. When the user resumes, continue to Step 5.
+**Actionable comments found:** Run `/bty`. Follow all steps in that skill. `/bty` submits and invokes `/reply-comments` which **stops the run** so the user can post replies via Reviewable. When the user resumes, continue to Step 5.
 
 ## Step 5: Final CI Validation
 
