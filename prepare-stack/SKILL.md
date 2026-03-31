@@ -19,7 +19,7 @@ If a restack is in progress, resolve it first with `/fix-stack-conflicts` before
 
 Run `/sync-trunk`. Follow all steps in that skill.
 
-**Gate:** `gt ls -s` shows a clean stack with no restack in progress. If not, stop and report.
+If the stack has conflicts after sync, run `/fix-stack-conflicts`. Follow all steps in that skill.
 
 ## Step 3: Walk Stack (Bottom to Top)
 
