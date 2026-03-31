@@ -20,17 +20,26 @@ git diff HEAD^ --name-only
 
 Crate names come from `crates/<crate_name>/`. Collect all unique crate names and build `-p` flags (e.g., `-p crate_a -p crate_b`).
 
-## Step 2: Self-Review
+## Step 2: Gather All Feedback (in parallel)
 
-Run `/review` on the current PR number (get it with `gh pr view --json number -q .number`). This catches general code quality issues: correctness, conventions, performance, tests, security.
+Run all three review sources **in parallel** to collect findings before making any changes:
 
-Then run `/shahak-review` on the current branch. This catches Shahak's specific review preferences: naming, API design, async patterns, documentation, testing patterns.
+1. `/review` on the current PR number (get it with `gh pr view --json number -q .number`) — general code quality: correctness, conventions, performance, tests, security.
+2. `/shahak-review` on the current branch — Shahak's specific preferences: naming, API design, async patterns, documentation, testing patterns.
+3. `/fetch-pr-comments` to get actionable reviewer threads:
+   ```bash
+   ~/.claude/skills/fetch-pr-comments/scripts/fetch_comments.sh
+   ```
 
-If both reviews report no issues, skip to Step 4.
+Collect all findings into a single list before proceeding.
 
-## Step 3: Fix Review Findings
+If no findings from any source, skip to Step 5.
 
-1. Fix each finding in the code.
+## Step 3: Fix All Findings
+
+Address all findings from Step 2 — self-review issues and reviewer comments together:
+
+1. Fix each finding in the code. For reviewer comments, follow the `/bty` approach: prefer refactoring over explanation, defer risky changes with `TODO(AndrewL): ...`.
 2. **Check for upstack overlap:** Run `/check-upstack-overlap` to verify the fixes don't duplicate work in PRs above. If overlap is detected, revert the overlapping changes — those findings should be skipped since they're handled up-stack. Report the skipped findings to the user.
 3. Run `/validate` on the affected crate(s):
    ```bash
@@ -38,19 +47,11 @@ If both reviews report no issues, skip to Step 4.
    ```
    Fix any validation failures and re-validate until passing.
 4. Run `/amend-restack` to commit the fixes. Follow all steps in that skill.
-5. **Re-review:** Run `/review` and `/shahak-review` again to verify all findings are addressed. If new violations appear, repeat this step. **Stop after 3 iterations maximum** -- if violations persist, report them to the user and continue to Step 4.
+5. **Re-review:** Run `/review` and `/shahak-review` again to verify all findings are addressed. If new violations appear, repeat this step. **Stop after 3 iterations maximum** — if violations persist, report them to the user and continue to Step 4.
 
-## Step 4: Address Reviewer Comments
+## Step 4: Reply to Reviewers
 
-Check for actionable review threads on the current PR:
-
-```bash
-~/.claude/skills/fetch-pr-comments/scripts/fetch_comments.sh
-```
-
-**No actionable comments:** Skip to Step 5.
-
-**Actionable comments found:** Run `/bty`. Follow all steps in that skill. `/bty` submits and invokes `/reply-comments` which **stops the run** so the user can post replies via Reviewable. When the user resumes, continue to Step 5.
+If reviewer comments were found in Step 2, invoke `/reply-comments` using the Skill tool. It will present a reply table and **stop the run** so the user can post replies via Reviewable. When the user resumes, continue to Step 5.
 
 ## Step 5: Final CI Validation
 
