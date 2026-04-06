@@ -21,6 +21,14 @@ run() {
 run "commitlint"  "fix commit message to match 'scope: subject' format" \
   bash -c 'git log -1 --format=%s | npx commitlint --verbose'
 
+# Check exactly one commit in this PR
+parent_branch=$(gt branch parent 2>/dev/null || true)
+if [ -n "$parent_branch" ]; then
+  commit_count=$(git rev-list --count "$parent_branch"..HEAD)
+  run "single commit" "squash to one commit: git reset --soft $parent_branch && git commit" \
+    test "$commit_count" -eq 1
+fi
+
 # Check commit message matches remote PR title (skip if no PR exists)
 pr_title=$(gh pr view --json title --jq .title 2>/dev/null || true)
 if [ -n "$pr_title" ]; then
