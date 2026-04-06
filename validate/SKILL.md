@@ -14,14 +14,15 @@ Run the full CI validation suite on the current PR.
 
 The script runs these checks in order, stopping at the first failure:
 1. **Commitlint** — commit message matches `scope: subject` format
-2. **PR title match** — commit message matches the remote PR title
-3. **rustfmt** — Rust formatting
-4. **taplo** — TOML formatting
-5. **Cargo.lock** — lockfile consistency
-6. **Clippy** — lint warnings (treated as errors)
-7. **Nextest** — unit/integration tests
-8. **Doc tests** — documentation tests
-9. **Machete** — unused dependencies
+2. **Single commit** — PR has exactly one commit
+3. **PR title match** — commit message matches the remote PR title
+4. **rustfmt** — Rust formatting
+5. **taplo** — TOML formatting
+6. **Cargo.lock** — lockfile consistency
+7. **Clippy** — lint warnings (treated as errors)
+8. **Nextest** — unit/integration tests
+9. **Doc tests** — documentation tests
+10. **Machete** — unused dependencies
 
 ## Output
 
@@ -34,6 +35,7 @@ The script runs these checks in order, stopping at the first failure:
 - **Taplo:** Run `scripts/taplo.sh` to auto-fix TOML formatting.
 - **Clippy/tests:** Read the error output, fix the code, and re-run.
 - **Commitlint:** Fix the commit message with `gt m -m "scope: subject"`.
+- **Single commit:** Run `gt branch squash --no-edit` to squash into one commit.
 - **PR title match:** Update the PR title or commit message so they match.
 - **Machete:** Remove unused dependencies from `Cargo.toml`.
 
