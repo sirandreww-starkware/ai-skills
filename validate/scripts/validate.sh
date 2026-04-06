@@ -25,8 +25,13 @@ run "commitlint"  "fix commit message to match 'scope: subject' format" \
 parent_branch=$(gt branch info 2>/dev/null | grep 'Parent:' | sed 's/Parent: //' || true)
 if [ -n "$parent_branch" ]; then
   commit_count=$(git rev-list --count "$parent_branch"..HEAD)
-  run "single commit" "squash to one commit: gt branch squash --no-edit" \
-    test "$commit_count" -eq 1
+  if [ "$commit_count" -ne 1 ]; then
+    if git merge-base --is-ancestor "$parent_branch" HEAD 2>/dev/null; then
+      run "single commit" "squash to one commit: gt branch squash --no-edit" false
+    else
+      run "single commit" "restack to incorporate parent changes: gt restack" false
+    fi
+  fi
 fi
 
 # Check commit message matches remote PR title (skip if no PR exists)
