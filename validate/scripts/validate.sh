@@ -22,10 +22,10 @@ run "commitlint"  "fix commit message to match 'scope: subject' format" \
   bash -c 'git log -1 --format=%s | npx commitlint --verbose'
 
 # Check exactly one commit in this PR
-parent_branch=$(gt branch parent 2>/dev/null || true)
+parent_branch=$(gt branch info 2>/dev/null | grep 'Parent:' | sed 's/Parent: //' || true)
 if [ -n "$parent_branch" ]; then
   commit_count=$(git rev-list --count "$parent_branch"..HEAD)
-  run "single commit" "squash to one commit: git reset --soft $parent_branch && git commit" \
+  run "single commit" "squash to one commit: gt branch squash --no-edit" \
     test "$commit_count" -eq 1
 fi
 
