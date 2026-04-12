@@ -44,11 +44,13 @@ For each conflicting file:
 
 ## Step 3: Validate
 
-After resolving all conflicts in the current PR, run `/validate`:
+After resolving all conflicts in the current PR, run `/validate` with `--skip-commit-check`:
 
 ```bash
-~/.claude/skills/validate/scripts/validate.sh <CRATE_FLAGS>
+~/.claude/skills/validate/scripts/validate.sh --skip-commit-check <CRATE_FLAGS>
 ```
+
+**IMPORTANT:** Always use `--skip-commit-check` during restack resolution. The commit state is temporary (rebase in progress), so commitlint, single-commit, and PR title checks will fail spuriously. These checks run normally after the restack completes.
 
 The `/validate` output includes the failing step and a suggested fix command. Fix any failures and re-validate until it passes. Only proceed when validation passes.
 

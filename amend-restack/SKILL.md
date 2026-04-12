@@ -33,9 +33,9 @@ If `gt m` pauses due to conflicts (check `gt status`):
    - Watch for subtle conflicts in imports, `mod` declarations, and `Cargo.toml` dependency lists.
    - If a conflict is genuinely contradictory, ask the user.
 
-3. **Validate the resolved code.** Run `/validate` on the affected crate(s):
+3. **Validate the resolved code.** Run `/validate` with `--skip-commit-check` (commit state is temporary during restack):
    ```bash
-   ~/.claude/skills/validate/scripts/validate.sh <CRATE_FLAGS>
+   ~/.claude/skills/validate/scripts/validate.sh --skip-commit-check <CRATE_FLAGS>
    ```
    Fix any failures and re-validate until it passes.
 
