@@ -1,13 +1,37 @@
 #!/usr/bin/env bash
-# Fetch actionable PR review threads for the current branch.
-# Outputs JSON array of threads where the last comment is NOT by the PR author.
+# Fetch PR review threads for the current branch.
+# Outputs JSON array of threads.
 # Each thread: {thread_id, path, line, side, resolved, comments: [{author, body, created_at}]}
-# Usage: fetch_comments.sh
+#
+# Flags:
+#   -a, --all            Show all threads (including ones the author already replied to)
+#   -u, --unresolved     Only show unresolved threads (skip resolved inline threads)
+#   --no-bots            Exclude threads where every comment is from a bot
+#   -b, --branch NAME    Branch to check (default: current branch)
+#
+# Default (no flags): show threads where the last comment is NOT by the PR author.
 # Requires: gh CLI, jq
 
 set -euo pipefail
 
-BRANCH="${1:-$(git branch --show-current)}"
+# Parse flags
+SHOW_ALL=false
+UNRESOLVED_ONLY=false
+NO_BOTS=false
+BRANCH=""
+
+while [[ $# -gt 0 ]]; do
+  case "$1" in
+    -a|--all)        SHOW_ALL=true; shift ;;
+    -u|--unresolved) UNRESOLVED_ONLY=true; shift ;;
+    --no-bots)       NO_BOTS=true; shift ;;
+    -b|--branch)     BRANCH="$2"; shift 2 ;;
+    -*)              echo "Unknown flag: $1" >&2; exit 1 ;;
+    *)               BRANCH="$1"; shift ;;  # positional arg = branch
+  esac
+done
+
+BRANCH="${BRANCH:-$(git branch --show-current)}"
 
 # Find the PR for this branch
 PR_JSON=$(gh pr list --head "$BRANCH" --json number,author --limit 1)
@@ -48,12 +72,13 @@ COMMENTS=$(gh api "repos/$OWNER/$REPO/pulls/$PR_NUMBER/comments" --paginate 2>/d
 REVIEWS=$(gh api "repos/$OWNER/$REPO/pulls/$PR_NUMBER/reviews" --paginate 2>/dev/null || echo "[]")
 
 # Process inline comments: group by thread, tag with resolved status
-ACTIONABLE_THREADS=$(echo "$COMMENTS" | jq -r --arg me "$MY_LOGIN" --argjson resolved "$RESOLVED_IDS" '
+INLINE_THREADS=$(echo "$COMMENTS" | jq -r --arg me "$MY_LOGIN" --argjson resolved "$RESOLVED_IDS" \
+  --argjson show_all "$SHOW_ALL" --argjson unresolved_only "$UNRESOLVED_ONLY" --argjson no_bots "$NO_BOTS" '
   # Group comments into threads by root comment id
   group_by(.in_reply_to_id // .id)
   | map(sort_by(.created_at))
-  # Keep threads where last comment is NOT by the PR author (actionable)
-  | map(select(.[-1].user.login != $me))
+  # Filter by actionable (last comment not by author) unless --all
+  | if $show_all then . else map(select(.[-1].user.login != $me)) end
   # Format each thread, tagging resolved status
   | map({
       thread_id: (.[0].in_reply_to_id // .[0].id),
@@ -67,13 +92,18 @@ ACTIONABLE_THREADS=$(echo "$COMMENTS" | jq -r --arg me "$MY_LOGIN" --argjson res
         created_at: .created_at
       }]
     })
+  # Filter resolved if --unresolved
+  | if $unresolved_only then map(select(.resolved | not)) else . end
+  # Filter bot-only threads if --no-bots
+  | if $no_bots then map(select(.comments | map(.author | test("\\[bot\\]$")) | all | not)) else . end
 ')
 
 # Process top-level review comments (body-only reviews, not inline).
 # Reviewable posts each reply as a separate GitHub review. We group them into
 # threads by extracting the Reviewable discussion ID from URLs in each ___-separated
 # section, then keep only threads where the last comment is NOT by the PR author.
-REVIEW_COMMENTS=$(echo "$REVIEWS" | jq -r --arg me "$MY_LOGIN" '
+REVIEW_THREADS=$(echo "$REVIEWS" | jq -r --arg me "$MY_LOGIN" \
+  --argjson show_all "$SHOW_ALL" --argjson no_bots "$NO_BOTS" '
   # Split each review body into per-discussion sections and tag with metadata
   [.[] | select(.body != null and .body != "" and .state != "PENDING") |
     .user.login as $author | .submitted_at as $time |
@@ -96,8 +126,8 @@ REVIEW_COMMENTS=$(echo "$REVIEWS" | jq -r --arg me "$MY_LOGIN" '
   ] |
   # Group by Reviewable thread ID and sort each group chronologically
   group_by(.thread_id) | map(sort_by(.submitted_at)) |
-  # Keep only threads where the last comment is NOT by the PR author
-  map(select(.[-1].author != $me)) |
+  # Filter by actionable (last comment not by author) unless --all
+  if $show_all then . else map(select(.[-1].author != $me)) end |
   # Format to match existing output structure
   map({
     thread_id: .[0].thread_id,
@@ -105,8 +135,10 @@ REVIEW_COMMENTS=$(echo "$REVIEWS" | jq -r --arg me "$MY_LOGIN" '
     line: .[0].line,
     side: null,
     comments: [.[] | {author, body, created_at: .submitted_at}]
-  })
+  }) |
+  # Filter bot-only threads if --no-bots
+  if $no_bots then map(select(.comments | map(.author | test("\\[bot\\]$")) | all | not)) else . end
 ')
 
 # Merge both sets
-echo "$ACTIONABLE_THREADS" "$REVIEW_COMMENTS" | jq -s 'add // []'
+echo "$INLINE_THREADS" "$REVIEW_THREADS" | jq -s 'add // []'
