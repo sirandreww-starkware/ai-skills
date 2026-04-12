@@ -8,10 +8,10 @@ Fetch the latest trunk and rebase the current stack on it, resolving any conflic
 
 ## Step 1: Sync & Restack
 
-Sync all branches with remote, fetch latest trunk, and restack:
+Sync the current stack with remote, fetch latest trunk, and restack:
 
 ```bash
-gt sync
+gt get
 ```
 
 If the sync completes cleanly, skip to Step 3.
