@@ -40,7 +40,7 @@ If no findings from any source, skip to Step 5.
 Address all findings from Step 2 — self-review issues and reviewer comments together:
 
 1. Fix each finding in the code. For reviewer comments, follow the `/bty` approach: prefer refactoring over explanation, defer risky changes with `TODO(AndrewL): ...`.
-2. **Check for upstack overlap:** Run `/check-upstack-overlap` to verify the fixes don't duplicate work in PRs above. If overlap is detected, revert the overlapping changes — those findings should be skipped since they're handled up-stack. Report the skipped findings to the user.
+2. **Check for upstack overlap (MANDATORY):** Always use `/check-upstack-overlap` — do NOT manually inspect upstack PRs with `gt up`, `git diff`, or ad-hoc commands. Run the skill to verify the fixes don't duplicate work in PRs above. If overlap is detected, revert the overlapping changes — those findings should be skipped since they're handled up-stack. Report the skipped findings to the user.
 3. Run `/validate` on the affected crate(s):
    ```bash
    ~/.claude/skills/validate/scripts/validate.sh <CRATE_FLAGS>
