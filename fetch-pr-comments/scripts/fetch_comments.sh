@@ -69,19 +69,43 @@ ACTIONABLE_THREADS=$(echo "$COMMENTS" | jq -r --arg me "$MY_LOGIN" --argjson res
     })
 ')
 
-# Process top-level review comments (body-only reviews, not inline)
+# Process top-level review comments (body-only reviews, not inline).
+# Reviewable posts each reply as a separate GitHub review. We group them into
+# threads by extracting the Reviewable discussion ID from URLs in each ___-separated
+# section, then keep only threads where the last comment is NOT by the PR author.
 REVIEW_COMMENTS=$(echo "$REVIEWS" | jq -r --arg me "$MY_LOGIN" '
-  [.[] | select(.body != null and .body != "" and .state != "PENDING" and .user.login != $me) | {
-    thread_id: .id,
-    path: null,
-    line: null,
+  # Split each review body into per-discussion sections and tag with metadata
+  [.[] | select(.body != null and .body != "" and .state != "PENDING") |
+    .user.login as $author | .submitted_at as $time |
+    (.body | split("___")) |
+    .[1:][] |  # skip the header (before first ___)
+    . as $section |
+    # Extract Reviewable thread ID (first component of the #-<ID>:<ID>:<hash> fragment)
+    (try ($section | capture("reviewable\\.io/reviews/[^#]+#(?<tid>[^:]+):") | .tid) // null) as $thread_id |
+    select($thread_id != null) |
+    # Extract file path and line if present (inline comments have `path` line N format)
+    (try ($section | capture("\\*\\[`(?<path>[^`]+)` line (?<line>[0-9]+)")) // null) as $loc |
+    {
+      thread_id: $thread_id,
+      author: $author,
+      submitted_at: $time,
+      body: $section,
+      path: (if $loc then $loc.path else null end),
+      line: (if $loc then ($loc.line | tonumber) else null end)
+    }
+  ] |
+  # Group by Reviewable thread ID and sort each group chronologically
+  group_by(.thread_id) | map(sort_by(.submitted_at)) |
+  # Keep only threads where the last comment is NOT by the PR author
+  map(select(.[-1].author != $me)) |
+  # Format to match existing output structure
+  map({
+    thread_id: .[0].thread_id,
+    path: .[0].path,
+    line: .[0].line,
     side: null,
-    comments: [{
-      author: .user.login,
-      body: .body,
-      created_at: .submitted_at
-    }]
-  }]
+    comments: [.[] | {author, body, created_at: .submitted_at}]
+  })
 ')
 
 # Merge both sets
