@@ -5,25 +5,25 @@
 #
 # Flags:
 #   -a, --all            Show all threads (including ones the author already replied to)
-#   -u, --unresolved     Only show unresolved threads (skip resolved inline threads)
+#   -r, --resolved       Include resolved threads (by default, only unresolved threads are shown)
 #   --no-bots            Exclude threads where every comment is from a bot
 #   -b, --branch NAME    Branch to check (default: current branch)
 #
-# Default (no flags): show threads where the last comment is NOT by the PR author.
+# Default (no flags): show unresolved threads where the last comment is NOT by the PR author.
 # Requires: gh CLI, jq
 
 set -euo pipefail
 
 # Parse flags
 SHOW_ALL=false
-UNRESOLVED_ONLY=false
+INCLUDE_RESOLVED=false
 NO_BOTS=false
 BRANCH=""
 
 while [[ $# -gt 0 ]]; do
   case "$1" in
     -a|--all)        SHOW_ALL=true; shift ;;
-    -u|--unresolved) UNRESOLVED_ONLY=true; shift ;;
+    -r|--resolved)   INCLUDE_RESOLVED=true; shift ;;
     --no-bots)       NO_BOTS=true; shift ;;
     -b|--branch)     BRANCH="$2"; shift 2 ;;
     -*)              echo "Unknown flag: $1" >&2; exit 1 ;;
@@ -71,9 +71,12 @@ COMMENTS=$(gh api "repos/$OWNER/$REPO/pulls/$PR_NUMBER/comments" --paginate 2>/d
 # Fetch top-level reviews (for review-level comments that aren't inline)
 REVIEWS=$(gh api "repos/$OWNER/$REPO/pulls/$PR_NUMBER/reviews" --paginate 2>/dev/null || echo "[]")
 
+# Fetch issue comments (Reviewable sometimes posts threaded replies here)
+ISSUE_COMMENTS=$(gh api "repos/$OWNER/$REPO/issues/$PR_NUMBER/comments" --paginate 2>/dev/null || echo "[]")
+
 # Process inline comments: group by thread, tag with resolved status
 INLINE_THREADS=$(echo "$COMMENTS" | jq -r --arg me "$MY_LOGIN" --argjson resolved "$RESOLVED_IDS" \
-  --argjson show_all "$SHOW_ALL" --argjson unresolved_only "$UNRESOLVED_ONLY" --argjson no_bots "$NO_BOTS" '
+  --argjson show_all "$SHOW_ALL" --argjson include_resolved "$INCLUDE_RESOLVED" --argjson no_bots "$NO_BOTS" '
   # Group comments into threads by root comment id
   group_by(.in_reply_to_id // .id)
   | map(sort_by(.created_at))
@@ -92,23 +95,32 @@ INLINE_THREADS=$(echo "$COMMENTS" | jq -r --arg me "$MY_LOGIN" --argjson resolve
         created_at: .created_at
       }]
     })
-  # Filter resolved if --unresolved
-  | if $unresolved_only then map(select(.resolved | not)) else . end
+  # Filter resolved unless --resolved
+  | if $include_resolved then . else map(select(.resolved | not)) end
   # Filter bot-only threads if --no-bots
   | if $no_bots then map(select(.comments | map(.author | test("\\[bot\\]$")) | all | not)) else . end
 ')
 
-# Process top-level review comments (body-only reviews, not inline).
-# Reviewable posts each reply as a separate GitHub review. We group them into
-# threads by extracting the Reviewable discussion ID from URLs in each ___-separated
-# section, then keep only threads where the last comment is NOT by the PR author.
-REVIEW_THREADS=$(echo "$REVIEWS" | jq -r --arg me "$MY_LOGIN" \
-  --argjson show_all "$SHOW_ALL" --argjson no_bots "$NO_BOTS" '
-  # Split each review body into per-discussion sections and tag with metadata
-  [.[] | select(.body != null and .body != "" and .state != "PENDING") |
-    .user.login as $author | .submitted_at as $time |
+# Process Reviewable threads from reviews and issue comments.
+# Reviewable posts replies as separate GitHub reviews OR issue comments. We normalize
+# both into a single stream, then group into threads by extracting the Reviewable
+# discussion ID from URLs in each ___-separated section.
+REVIEW_THREADS=$(jq -n --argjson reviews "$REVIEWS" --argjson issue_comments "$ISSUE_COMMENTS" \
+  --arg me "$MY_LOGIN" --argjson show_all "$SHOW_ALL" --argjson no_bots "$NO_BOTS" '
+  # Normalize reviews and issue comments into a uniform list of {author, time, body}
+  [
+    ($reviews[] | select(.body != null and .body != "" and .state != "PENDING") |
+      {author: .user.login, time: .submitted_at, body: .body}),
+    ($issue_comments[] | select(.body != null and .body != "") |
+      {author: .user.login, time: .created_at, body: .body})
+  ] |
+  # Split each body into per-discussion sections and tag with metadata.
+  # Reviews have a header before the first ___ separator; issue comments may not.
+  # If no ___ exists, treat the entire body as a single section.
+  [.[] |
+    .author as $author | .time as $time |
     (.body | split("___")) |
-    .[1:][] |  # skip the header (before first ___)
+    (if length > 1 then .[1:][] else .[0] end) |
     . as $section |
     # Extract Reviewable thread ID (first component of the #-<ID>:<ID>:<hash> fragment)
     (try ($section | capture("reviewable\\.io/reviews/[^#]+#(?<tid>[^:]+):") | .tid) // null) as $thread_id |
