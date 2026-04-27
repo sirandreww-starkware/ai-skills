@@ -8,22 +8,30 @@ Resolve conflicts in a Graphite PR stack and get it back to a clean state.
 
 This skill does not submit. The caller or user should submit when ready.
 
-## Step 1: Assess the Situation
+## Step 1: Kick Off the Restack
 
 1. **Check current state:**
    ```bash
    gt ls -s
    gt status
    ```
-   `gt ls -s` shows the current stack. `gt status` shows which branch has conflicts and the restack progress.
+   `gt ls -s` shows the current stack. `gt status` shows whether a restack is already in progress.
 
-2. **Identify the crate(s) being worked on.** Ask the user, or infer from changed files:
+2. **Start the restack** (only if one is not already in progress):
+   ```bash
+   gt restack
+   ```
+   If `gt status` already shows a paused restack with conflicts, skip this and proceed directly to conflict resolution.
+
+   If `gt restack` completes cleanly with no conflicts, skip to Step 6 — there is nothing to resolve.
+
+3. **Identify the crate(s) being worked on.** Ask the user, or infer from changed files:
    ```bash
    git diff --name-only HEAD
    ```
    Crate names come from `crates/<crate_name>/`. Collect all unique crate names and build `-p` flags (e.g. `-p crate_a -p crate_b`).
 
-3. **See the conflicts:**
+4. **See the conflicts:**
    ```bash
    git diff --name-only --diff-filter=U
    ```
