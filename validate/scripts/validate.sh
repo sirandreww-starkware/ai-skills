@@ -76,6 +76,9 @@ run "nextest"     "fix the failing tests above" \
 run "doc tests"   "fix the failing doc tests above" \
   cargo test "$@" --doc
 
+run "rustdoc"     "fix the broken intra-doc links / rustdoc warnings above" \
+  env "RUSTDOCFLAGS=-D warnings" cargo doc "$@" --no-deps --document-private-items
+
 run "machete"     "remove unused dependencies from Cargo.toml" \
   cargo machete
 
