@@ -1,6 +1,6 @@
 ---
 name: polish
-description: "Iterative review-fix-validate cycle that runs /review, /shahak-review, and /security-review, fixes all findings, and /validates until the PR is clean. Use when the user says 'polish', 'polish this PR', 'make this perfect', 'review and fix everything', or wants multiple rounds of review+fix."
+description: "Iterative review-fix-validate cycle that runs /review, /shahak-review, /security-review, and /codestyle-review, fixes all findings, and /validates until the PR is clean. Use when the user says 'polish', 'polish this PR', 'make this perfect', 'review and fix everything', or wants multiple rounds of review+fix."
 argument-hint: "[max-rounds]"
 ---
 
@@ -27,15 +27,18 @@ rounds.
 
 ## Round Loop (repeat up to max-rounds)
 
-### Step 1: Review (run all three in parallel)
+### Step 1: Review (run all four in parallel)
 
-Run these three reviews **in parallel** to gather all findings before making changes:
+Run these four reviews **in parallel** to gather all findings before making changes:
 
 1. **`/review`** — General code review: correctness, conventions, performance, test coverage.
 2. **`/shahak-review`** — Shahak's specific preferences: naming, API design, documentation,
    testing patterns, code organization.
 3. **`/security-review`** — Security-focused: input validation, auth, crypto, injection, data
    exposure. Only high-confidence findings.
+4. **`/codestyle-review`** — Rust Coding Conventions: file/directory layout, error handling,
+   async patterns, type safety, documentation, casting, imports, and more. Spawns one parallel
+   agent per rule (~51 agents).
 
 Collect ALL findings from all three reviews into a single ranked list:
 - **High severity** (bugs, security issues, correctness errors) — fix first
