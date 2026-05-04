@@ -27,7 +27,7 @@ Run all five review sources **in parallel** to collect findings before making an
 1. `/review` on the current PR number (get it with `gh pr view --json number -q .number`) — general code quality: correctness, conventions, performance, tests, security.
 2. `/shahak-review` on the current branch — Shahak's specific preferences: naming, API design, async patterns, documentation, testing patterns.
 3. `/security-review` on the pending changes — focused security review of the current branch.
-4. `/codestyle-review` on the current branch — Rust Coding Conventions check (file layout, error handling, async patterns, type safety, documentation, casting, imports, etc.). Spawns one parallel agent per rule (~51 agents).
+4. `/codestyle-review` on the current branch — Rust Coding Conventions check (51 rules: file layout, error handling, async patterns, type safety, documentation, casting, imports, etc.).
 5. `/fetch-pr-comments` to get actionable reviewer threads:
    ```bash
    ~/.claude/skills/fetch-pr-comments/scripts/fetch_comments.sh

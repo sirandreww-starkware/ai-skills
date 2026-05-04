@@ -1,16 +1,25 @@
 ---
 name: codestyle-review
-description: "Review Rust code changes against the team's Rust Coding Conventions. Spawns one parallel agent per rule (~51 agents) to check each rule independently, then aggregates findings into a single report grouped by file. Use when the user says 'codestyle review', 'codestyle-review', 'rust review', 'check rust conventions', 'review code style', or wants a thorough convention check before submitting a PR."
+description: "Review Rust code changes against the team's Rust Coding Conventions (51 rules covering file layout, error handling, async patterns, type safety, documentation, casting, imports, and more). Use when the user says 'codestyle review', 'codestyle-review', 'rust review', 'check rust conventions', 'review code style', or wants a thorough convention check before submitting a PR."
 argument-hint: "[file-or-branch]"
 ---
 
 # Codestyle Review
 
-Review Rust code changes against the team's Rust Coding Conventions. Each rule is checked by a **separate parallel agent** so reviews are focused, independent, and exhaustive — no rule competes with another for attention. Findings are aggregated into a single report.
+Review the code changes specified by `$ARGUMENTS` (defaults to staged + unstaged Rust changes) against the Rust Coding Conventions below. Apply every rule; report every violation.
 
-## Step 1: Determine Scope
+For each violation found, output:
 
-Default scope: staged + unstaged Rust changes.
+1. **File and line**
+2. **Rule violated** (reference the rule's number and short name)
+3. **What's wrong** (one sentence)
+4. **Suggested fix** (concrete)
+
+Group findings by file. At the end, summarize the total count per rule.
+
+## Scope
+
+Default: staged + unstaged Rust changes.
 
 Argument handling for `$ARGUMENTS`:
 - Path (file or directory) → review just that path.
@@ -18,10 +27,7 @@ Argument handling for `$ARGUMENTS`:
 - Literal `HEAD` or a commit ref → diff against the parent of HEAD.
 - Empty → staged + unstaged Rust changes (`git diff HEAD`).
 
-Gather:
-
-1. The list of changed `.rs` files and any `Cargo.toml` files (the dependency check needs Cargo.toml).
-2. The full unified diff with generous context.
+Gather the list of changed `.rs` files and any `Cargo.toml` files (rule 35 needs Cargo.toml), and the full unified diff with generous context:
 
 ```bash
 # Default scope:
@@ -31,48 +37,11 @@ git diff HEAD -U10 -- '*.rs' 'Cargo.toml' '**/Cargo.toml'
 
 If the scope is empty, print `Codestyle review: no Rust changes to review.` and stop.
 
-Save the file list and diff — every agent below needs them.
+Read each changed file in full (use the Read tool on each path) — many rules require seeing surrounding context, not just the diff. Focus on lines that are added or modified in the diff. Pre-existing violations on unchanged lines should be flagged only if directly impacted by the change.
 
-## Step 2: Launch Parallel Review Agents
+## Rules
 
-In a **single message**, launch every check below as a parallel `general-purpose` Agent invocation (one Agent call per check). Each agent receives:
-
-- The file list and the full diff (substituted into the `[SCOPE]` placeholder).
-- The specific rule details for THAT check only.
-- A directive to ignore everything outside its rule.
-- A strict JSON output schema.
-
-### Standard prompt template for each agent
-
-```
-You are reviewing Rust code changes against ONE specific coding convention rule. Other rules are being checked by other reviewers in parallel — flag NOTHING outside your assigned rule.
-
-# Your rule
-<RULE TITLE>
-
-<RULE DETAILS — including what to flag and what NOT to flag>
-
-# Scope
-Files changed:
-<FILE LIST>
-
-Diff:
-<DIFF>
-
-# Task
-1. Read each changed file in full (use Read on each path) before deciding what to flag — many rules require seeing surrounding context, not just the diff.
-2. Identify violations of YOUR rule. Focus on lines that are added or modified in the diff. Pre-existing violations on unchanged lines should be flagged only if directly impacted by the change.
-3. Output STRICT JSON: an array of objects with shape:
-   {"file": "<absolute path>", "line": <number>, "violation": "<one-sentence description>", "fix": "<concrete suggestion>"}
-   Output `[]` if no violations.
-4. Output ONLY the JSON array. No prose, no preamble, no fenced code block.
-
-Remember: stay focused on YOUR ONE RULE. Do not flag anything else.
-```
-
-### The Checks
-
-Spawn one agent per check. All checks below derive directly from the Rust Coding Conventions document and together cover every rule it states.
+The complete list — apply each one when reading the changed files.
 
 ---
 
@@ -643,24 +612,17 @@ The `if let { } else { }` pattern carries more cognitive load and is always more
 
 ---
 
-## Step 3: Aggregate Findings
+## Output
 
-When all 51 agents return:
-
-1. Parse each agent's JSON array. If an agent returned anything other than valid JSON, surface that as a meta-failure (`Agent for rule N returned malformed output`) — don't try to extract findings from prose.
-2. Deduplicate by `(file, line, rule)` (different agents shouldn't overlap for focused rules; this is a safety net).
-3. Group findings by file path (relative to the repo root).
-4. Sort findings within each file by line number.
-
-### Output format
+Group findings by file path (relative to the repo root). Sort findings within each file by line number.
 
 ```markdown
 ## Codestyle Review
 
 ### <file path>
-- **L<line>** — `[<rule short name>]` <violation>
+- **L<line>** — `[<rule number>. <short name>]` <violation>
   - Fix: <suggested fix>
-- **L<line>** — `[<rule short name>]` <violation>
+- **L<line>** — `[<rule number>. <short name>]` <violation>
   - Fix: <suggested fix>
 
 ### <next file path>
@@ -670,7 +632,7 @@ When all 51 agents return:
 
 | Rule | Findings |
 |------|----------|
-| <rule name> | <count> |
+| <rule number>. <name> | <count> |
 | ... | ... |
 
 **Total: N findings across M files. K rules triggered.**

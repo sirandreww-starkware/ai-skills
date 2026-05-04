@@ -37,8 +37,7 @@ Run these four reviews **in parallel** to gather all findings before making chan
 3. **`/security-review`** — Security-focused: input validation, auth, crypto, injection, data
    exposure. Only high-confidence findings.
 4. **`/codestyle-review`** — Rust Coding Conventions: file/directory layout, error handling,
-   async patterns, type safety, documentation, casting, imports, and more. Spawns one parallel
-   agent per rule (~51 agents).
+   async patterns, type safety, documentation, casting, imports, and more (51 rules total).
 
 Collect ALL findings from all three reviews into a single ranked list:
 - **High severity** (bugs, security issues, correctness errors) — fix first
