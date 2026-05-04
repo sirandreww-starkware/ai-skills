@@ -1,13 +1,13 @@
 ---
 name: polish
-description: "Iterative review-fix-validate cycle that runs /review, /shahak-review, /security-review, and /codestyle-review, fixes all findings, and /validates until the PR is clean. Use when the user says 'polish', 'polish this PR', 'make this perfect', 'review and fix everything', or wants multiple rounds of review+fix."
+description: "Iterative review-fix-validate cycle that runs /all-reviews, fixes all findings, and /validates until the PR is clean. Use when the user says 'polish', 'polish this PR', 'make this perfect', 'review and fix everything', or wants multiple rounds of review+fix."
 argument-hint: "[max-rounds]"
 ---
 
 # Polish
 
 Run iterative review-fix-validate cycles on the current PR until no findings remain or the max
-rounds are reached. Each round runs three review types, fixes all findings, and validates.
+rounds are reached. Each round runs `/all-reviews`, fixes all findings, and validates.
 
 Default: 5 rounds. Pass a number as argument to override (e.g., `/polish 3`).
 
@@ -27,26 +27,18 @@ rounds.
 
 ## Round Loop (repeat up to max-rounds)
 
-### Step 1: Review (run all four in parallel)
+### Step 1: Run /all-reviews
 
-Run these four reviews **in parallel** to gather all findings before making changes:
+Invoke `/all-reviews` to run `/review`, `/shahak-review`, `/security-review`, and `/codestyle-review` in parallel and get aggregated findings.
 
-1. **`/review`** — General code review: correctness, conventions, performance, test coverage.
-2. **`/shahak-review`** — Shahak's specific preferences: naming, API design, documentation,
-   testing patterns, code organization.
-3. **`/security-review`** — Security-focused: input validation, auth, crypto, injection, data
-   exposure. Only high-confidence findings.
-4. **`/codestyle-review`** — Rust Coding Conventions: file/directory layout, error handling,
-   async patterns, type safety, documentation, casting, imports, and more (51 rules total).
-
-Collect ALL findings from all three reviews into a single ranked list:
+Rank the returned findings:
 - **High severity** (bugs, security issues, correctness errors) — fix first
 - **Medium severity** (design issues, missing tests, naming) — fix second
 - **Low severity** (comments, style, documentation) — fix last
 
 ### Step 2: Assess Findings
 
-If **zero findings** across all three reviews, the PR is polished. Print the summary and stop.
+If `/all-reviews` returned **zero findings**, the PR is polished. Print the summary and stop.
 
 If findings exist, proceed to Step 3.
 

@@ -22,18 +22,15 @@ Crate names come from `crates/<crate_name>/`. Collect all unique crate names and
 
 ## Step 2: Gather All Feedback (in parallel)
 
-Run all five review sources **in parallel** to collect findings before making any changes:
+Invoke `/all-reviews` and `/fetch-pr-comments` **in parallel** to collect findings before making any changes:
 
-1. `/review` on the current PR number (get it with `gh pr view --json number -q .number`) — general code quality: correctness, conventions, performance, tests, security.
-2. `/shahak-review` on the current branch — Shahak's specific preferences: naming, API design, async patterns, documentation, testing patterns.
-3. `/security-review` on the pending changes — focused security review of the current branch.
-4. `/codestyle-review` on the current branch — Rust Coding Conventions check (51 rules: file layout, error handling, async patterns, type safety, documentation, casting, imports, etc.).
-5. `/fetch-pr-comments` to get actionable reviewer threads:
+1. `/all-reviews` on the current branch — runs `/review`, `/shahak-review`, `/security-review`, `/codestyle-review` in parallel and returns aggregated self-review findings.
+2. `/fetch-pr-comments` to get actionable reviewer threads:
    ```bash
    ~/.claude/skills/fetch-pr-comments/scripts/fetch_comments.sh
    ```
 
-Collect all findings into a single list before proceeding.
+Collect all findings (self-review + reviewer comments) into a single list before proceeding.
 
 If no findings from any source, skip to Step 5.
 
@@ -49,7 +46,7 @@ Address all findings from Step 2 — self-review issues and reviewer comments to
    ```
    Fix any validation failures and re-validate until passing.
 4. Run `/amend-restack` to commit the fixes. Follow all steps in that skill.
-5. **Re-review:** Run `/review`, `/shahak-review`, `/security-review`, and `/codestyle-review` again to verify all findings are addressed. If new violations appear, repeat this step. **Stop after 3 iterations maximum** — if violations persist, report them to the user and continue to Step 4.
+5. **Re-review:** Run `/all-reviews` again to verify all findings are addressed. If new violations appear, repeat this step. **Stop after 3 iterations maximum** — if violations persist, report them to the user and continue to Step 4.
 
 ## Step 4: Reply to Reviewers
 
