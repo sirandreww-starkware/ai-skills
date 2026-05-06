@@ -46,6 +46,9 @@ if [ "$SKIP_COMMIT_CHECK" = false ]; then
         run "single commit" "restack to incorporate parent changes: gt restack" false
       fi
     fi
+
+    run "named todos" "fix unnamed TODOs above to use format // TODO(name): description" \
+      bash -c "sequencer_venv/bin/python scripts/named_todos.py --commit_id '$parent_branch'"
   fi
 
   # Check commit message matches remote PR title (skip if no PR exists)
