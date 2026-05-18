@@ -71,13 +71,13 @@ run "cargo lock"  "cargo update to regenerate Cargo.lock" \
   bash -c 'cargo metadata --locked --format-version=1 > /dev/null'
 
 run "clippy"      "fix the clippy warnings above" \
-  cargo clippy "$@" --all-targets -- -D warnings
+  cargo clippy "$@" --all-targets --all-features -- -D warnings
 
 run "nextest"     "fix the failing tests above" \
-  cargo nextest run "$@"
+  cargo nextest run "$@" --all-features
 
 run "doc tests"   "fix the failing doc tests above" \
-  cargo test "$@" --doc
+  cargo test "$@" --all-features --doc
 
 run "rustdoc"     "fix the broken intra-doc links / rustdoc warnings above" \
   env "RUSTDOCFLAGS=-D warnings" cargo doc "$@" --no-deps --document-private-items
