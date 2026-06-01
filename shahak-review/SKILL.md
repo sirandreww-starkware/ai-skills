@@ -273,6 +273,10 @@ Comprehensive rules distilled from all PR review comments on Andrew's PRs.
 ### PR title and commit message must accurately reflect the change
 - "Please change commit and PR title to reflect what this PR does. I prefer reviewing only after you do that."
 
+### Commit body must carry a conversation summary
+- The commit's first line is the `scope: subject` title; the **body** must end with a three-section summary of the Claude conversation that produced the PR: `## Goal`, `## Summary of changes`, and `## Key decision points` (for each non-trivial decision: what was decided, why, which alternatives were considered, and why they were rejected).
+- Shahak reviews the *why* and the paths not taken, not just the diff — the rejected alternatives are otherwise lost when the chat ends. `/commit-summary` drafts this body. Include it even on small PRs (decision-points can be brief). This is Shahak's personal preference, not a repo-wide policy.
+
 ### Don't rename files mid-review
 - "This PR is hard to review because you renamed the test file mid-review. Revert the rename and open a separate PR that merely renames the test file."
 

@@ -25,12 +25,19 @@ This skill assumes you have already made code changes and validated them with `/
 
 ## Step 2: Create the Inserted Branch
 
-The caller provides the commit message. The message must follow the repo's commitlint format (`scope: subject`).
+The caller provides the commit message. Its **first line** must follow the repo's commitlint format (`scope: subject`), and it must include the three-section conversation-summary **body** (`## Goal`, `## Summary of changes`, `## Key decision points`) — draft it with `/commit-summary`. Pass the subject and body as two `-m` flags (the `-m` arg is array-typed; Graphite joins them with a blank line).
 
 ### If the current branch has children:
 
 ```bash
-gt c -a --insert --no-interactive -m "commit message"
+gt c -a --insert --no-interactive -m "scope: subject" -m "## Goal
+...
+
+## Summary of changes
+...
+
+## Key decision points
+..."
 ```
 
 `--insert` creates a new branch between the current branch and its child. `--no-interactive` avoids prompts when there are multiple children (selects the first). `-a` stages all changes.
@@ -38,7 +45,14 @@ gt c -a --insert --no-interactive -m "commit message"
 ### If the current branch has NO children (top of stack):
 
 ```bash
-gt c -a --no-interactive -m "commit message"
+gt c -a --no-interactive -m "scope: subject" -m "## Goal
+...
+
+## Summary of changes
+...
+
+## Key decision points
+..."
 ```
 
 `--insert` is unnecessary at the top of the stack — a normal `gt c` creates the branch on top.

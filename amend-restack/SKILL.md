@@ -14,9 +14,11 @@ This skill assumes you have already made code changes and validated them with `/
 gt m -a && gt status
 ```
 
-**IMPORTANT:** Never pass `-m` to `gt m` — it changes the commit message. Use `gt m -a` to stage all changes and amend in one step.
+**IMPORTANT:** Never pass `-m` to `gt m` — a bare `-m "subject"` collapses the message to one line and wipes the conversation-summary body. Use `gt m -a` to stage all changes and amend in one step; this preserves the existing subject and body.
 
 This amends the current PR's commit and triggers a restack of child PRs.
+
+**If the amend introduces a new decision** worth recording (a non-trivial choice with rejected alternatives), update the commit body's `## Key decision points` section so the conversation summary stays accurate — edit the message with `gt m` (opens the editor, preserving the subject), rather than letting it go stale. Use `/commit-summary` for the body format.
 
 ## Step 2: Handle Restack Conflicts
 

@@ -34,7 +34,7 @@ Use Graphite's fold command to squash all commits in the current branch into one
 gt fold --keep bottom
 ```
 
-This squashes all commits in the branch, keeping the bottom (earliest) commit's message.
+This squashes all commits in the branch, keeping the bottom (earliest) commit's message — including its conversation-summary body. Any body content from the other (discarded) commits is lost.
 
 ## Step 3: Verify
 
@@ -44,4 +44,8 @@ Confirm the squash succeeded:
 gt log short
 ```
 
-There should now be exactly 1 commit. Report the result to the user.
+There should now be exactly 1 commit.
+
+## Step 4: Review the Body
+
+Because only the bottom commit's body survives, review it so the three-section conversation summary (`## Goal` / `## Summary of changes` / `## Key decision points`) still covers the *whole* PR. If later commits added changes or decisions not reflected there, redraft the body with `/commit-summary` and update it — edit with `gt m` (preserving the subject) — then re-run `/validate`. Report the result to the user.

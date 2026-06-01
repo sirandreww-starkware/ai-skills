@@ -113,7 +113,7 @@ Fix errors and re-run until passing.
 
 **Step 5b: Insert PR**
 
-Run `/insert-pr` with a descriptive commit message following the repo's `scope: subject` commitlint format. The message should summarize the review feedback being addressed.
+Run `/insert-pr` with a commit message whose first line follows the repo's `scope: subject` commitlint format. Include the three-section conversation-summary body (`## Goal` / `## Summary of changes` / `## Key decision points`), drafted with `/commit-summary`, summarizing the review feedback being addressed and any decisions made while addressing it.
 
 **Step 6b: Post-Insert Validation**
 

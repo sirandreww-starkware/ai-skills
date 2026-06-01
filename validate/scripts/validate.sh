@@ -49,6 +49,13 @@ if [ "$SKIP_COMMIT_CHECK" = false ]; then
 
     run "named todos" "fix unnamed TODOs above to use format // TODO(name): description" \
       bash -c "sequencer_venv/bin/python scripts/named_todos.py --commit_id '$parent_branch'"
+
+    # Check the commit body carries the three-section conversation summary (see /create-pr).
+    for section in "Goal" "Summary of changes" "Key decision points"; do
+      run "commit body: $section" \
+        "add the '## $section' section to the commit body (draft it with /commit-summary)" \
+        bash -c "git log -1 --format=%b | grep -qi '$section'"
+    done
   fi
 
   # Check commit message matches remote PR title (skip if no PR exists)
@@ -56,7 +63,7 @@ if [ "$SKIP_COMMIT_CHECK" = false ]; then
   if [ -n "$pr_title" ]; then
     commit_msg=$(git log -1 --format=%s)
     pr_number=$(gh pr view --json number --jq .number)
-    run "pr title match" "run: gh api repos/{owner}/{repo}/pulls/$pr_number -f title=\"$commit_msg\" --method PATCH (or if the commit message is wrong: gt m -m \"$pr_title\")" \
+    run "pr title match" "run: gh api repos/{owner}/{repo}/pulls/$pr_number -f title=\"$commit_msg\" --method PATCH (or if the commit message is wrong, edit it with 'gt m' preserving the body — do NOT 'gt m -m \"$pr_title\"', that wipes the conversation-summary body)" \
       test "$commit_msg" = "$pr_title"
   fi
 fi
