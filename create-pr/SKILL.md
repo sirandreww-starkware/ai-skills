@@ -46,18 +46,11 @@ verbatim for the next step.
 
 ## Step 3: Create the Commit
 
-The `-m` flag on `gt c` is array-typed, so pass the subject and the body as two separate `-m`
-flags (Graphite joins them with a blank line):
+The `-m` flag on `gt c` is array-typed, so pass the subject and the `/commit-summary` body as
+two separate `-m` flags (Graphite joins them with a blank line):
 
 ```bash
-gt c -a --no-interactive -m "scope: subject" -m "## Goal
-...
-
-## Summary of changes
-...
-
-## Key decision points
-..."
+gt c -a --no-interactive -m "scope: subject" -m "<body from /commit-summary>"
 ```
 
 `-a` stages all changes; `--no-interactive` avoids prompts. Always pass both.

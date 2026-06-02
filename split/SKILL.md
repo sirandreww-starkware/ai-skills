@@ -35,6 +35,8 @@ Automatically split a monolithic branch with many changes into a logical, review
 5. **User Approval**: Present plan and wait for approval/modifications
 6. **Execute Splits**: Use `gt split` to create the stack
 
+> **Commit messages for split PRs (sequencer):** each PR in the resulting stack is its own commit and must satisfy `/validate` — a `scope: subject` first line plus the three-section conversation-summary body. When authoring each split's message, draft its body with `/commit-summary`, scoped to that PR's slice of the change (its own Goal / Summary of changes / Key decision points). Run `/validate` on each PR after splitting.
+
 ## Semantic Analysis Principles
 
 ### Logical Boundaries

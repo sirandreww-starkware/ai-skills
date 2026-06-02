@@ -30,14 +30,7 @@ The caller provides the commit message. Its **first line** must follow the repo'
 ### If the current branch has children:
 
 ```bash
-gt c -a --insert --no-interactive -m "scope: subject" -m "## Goal
-...
-
-## Summary of changes
-...
-
-## Key decision points
-..."
+gt c -a --insert --no-interactive -m "scope: subject" -m "<body from /commit-summary>"
 ```
 
 `--insert` creates a new branch between the current branch and its child. `--no-interactive` avoids prompts when there are multiple children (selects the first). `-a` stages all changes.
@@ -45,14 +38,7 @@ gt c -a --insert --no-interactive -m "scope: subject" -m "## Goal
 ### If the current branch has NO children (top of stack):
 
 ```bash
-gt c -a --no-interactive -m "scope: subject" -m "## Goal
-...
-
-## Summary of changes
-...
-
-## Key decision points
-..."
+gt c -a --no-interactive -m "scope: subject" -m "<body from /commit-summary>"
 ```
 
 `--insert` is unnecessary at the top of the stack — a normal `gt c` creates the branch on top.

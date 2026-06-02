@@ -65,6 +65,7 @@ Amend the commit with all fixes:
 ```bash
 gt m -a
 ```
+`gt m -a` preserves the existing subject and conversation-summary body — never use a bare `gt m -m "subject"`, which would wipe the body. If a fix involved a new non-trivial decision, update the body's `## Key decision points` (redraft with `/commit-summary`) so it stays accurate.
 
 Run the full validation suite:
 ```bash
