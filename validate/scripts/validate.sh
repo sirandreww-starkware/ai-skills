@@ -48,7 +48,7 @@ if [ "$SKIP_COMMIT_CHECK" = false ]; then
     fi
 
     run "named todos" "fix unnamed TODOs above to use format // TODO(name): description" \
-      bash -c "sequencer_venv/bin/python scripts/named_todos.py --commit_id '$parent_branch'"
+      bash -c "\"\${VIRTUAL_ENV:-sequencer_venv}/bin/python\" scripts/named_todos.py --commit_id '$parent_branch'"
 
     # Check the commit body carries the three-section conversation summary (see /create-pr).
     for section in "Goal" "Summary of changes" "Key decision points"; do
